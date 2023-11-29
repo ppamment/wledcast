@@ -1,0 +1,10 @@
+numpy
+requests
+opencv-python
+asciimatics
+zeroconf
+pywin32
+dxcam
+pynput
+pillow>=8
+d3dshot
