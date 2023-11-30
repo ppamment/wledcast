@@ -35,6 +35,7 @@ def main():
                 win32gui.DispatchMessage(msg)
             else:
                 break
+
             start_time = time.time()
 
             # Capture the selected screen
