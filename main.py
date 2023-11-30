@@ -30,11 +30,12 @@ def main():
 
     try:
         while True:
-            msg = win32gui.GetMessage(None, 0, 0)
-            if msg[0] == 0 or msg[0] == -1:
+            msg = win32gui.MSG()
+            if win32gui.GetMessage(msg, None, 0, 0) > 0:
+                win32gui.TranslateMessage(msg)
+                win32gui.DispatchMessage(msg)
+            else:
                 break
-            win32gui.TranslateMessage(msg)
-            win32gui.DispatchMessage(msg)
             start_time = time.time()
 
             # Capture the selected screen
