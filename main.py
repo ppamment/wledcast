@@ -30,8 +30,7 @@ def main():
 
     try:
         while True:
-            msg = win32gui.MSG()
-            if win32gui.GetMessage(msg, None, 0, 0) > 0:
+            msg = win32gui.PumpWaitingMessages()
                 win32gui.TranslateMessage(msg)
                 win32gui.DispatchMessage(msg)
             else:
