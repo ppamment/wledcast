@@ -1,11 +1,9 @@
 import win32gui
 import win32con
 import win32api
-import threading
 from pynput import keyboard
 
-from screen_capture import get_scaling_factor
-
+pen_width = 6
 def create_border_window(rect):
     # Define window class
     class_name = 'BorderWindowClass'
@@ -23,10 +21,10 @@ def create_border_window(rect):
         class_name,
         'Border Window',
         style,
-        rect[0],
-        rect[1],
-        rect[2] - rect[0],
-        rect[3] - rect[1],
+        rect[0] - pen_width, # note the  -(a//-b) for ceil division
+        rect[1] - pen_width,
+        rect[2] - rect[0] + pen_width*2,
+        rect[3] - rect[1] + pen_width*2,
         0,
         0,
         hInstance,
@@ -66,7 +64,7 @@ def init_keybindings(hwnd, capture_rect) -> keyboard.Listener:
     keys_pressed = []
     aspect = (capture_rect[2] - capture_rect[0]) / (capture_rect[3] - capture_rect[1])
 
-    move_px_max = 50
+    move_px_max = 60
     move_px_min = 10
     maxX= win32api.GetSystemMetrics(win32con.SM_CXVIRTUALSCREEN)
     maxY = win32api.GetSystemMetrics(win32con.SM_CYVIRTUALSCREEN)
@@ -76,7 +74,8 @@ def init_keybindings(hwnd, capture_rect) -> keyboard.Listener:
         nonlocal move_px
         try:
             if key in keys_pressed:
-                move_px = min(move_px + 1, move_px_max)
+                # accelerate on hold
+                move_px = min(move_px + 5, move_px_max)
 
             if key in [keyboard.Key.ctrl_l, keyboard.Key.ctrl_r]:
                 if not keyboard.Key.ctrl in keys_pressed:
@@ -158,6 +157,5 @@ def init_keybindings(hwnd, capture_rect) -> keyboard.Listener:
             pass
 
     listener = keyboard.Listener(on_press=on_press, on_release=on_release)
-    listener.start()
 
     return listener

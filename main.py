@@ -1,4 +1,5 @@
 import time
+import threading
 
 import win32gui
 
@@ -7,6 +8,7 @@ import screen_capture
 import user_interface as ui
 from pixel_writer import PixelWriter
 
+target_fps = 25
 
 def main():
     # Discover WLED instances
@@ -21,50 +23,49 @@ def main():
 
     # get the capture coordinates: [left, top, right, bottom]
     capture_rect = screen_capture.get_capture_rect(hwnd, led_matrix_shape)
-
+    # draw a border around the captured area on screen
     gui_hwnd = ui.create_border_window(capture_rect)
     keyboard_listener = ui.init_keybindings(gui_hwnd, capture_rect)
-
     # Initialize the pixel writer
     pixel_writer = PixelWriter(selected_wled_host)
 
+    stop_casting_event = threading.Event()
+    frame_times = []
+    def cast():
+        with keyboard_listener:
+            while not stop_casting_event.is_set():
+                start = time.time()
+                # Capture the selected screen
+                rgb_array = screen_capture.capture_window_content(capture_rect, led_matrix_shape)
+                if rgb_array is None:
+                    print("**Dropped frame**".ljust(40))
+                    continue
+                # Update the LED matrix via WLED in real-time
+                pixel_writer.update_pixels(rgb_array)
+                end = time.time()
+                dt = end - start
+                # Chill if we're moving too fast
+                if dt < 1/target_fps:
+                    time.sleep(1/target_fps - dt)
+
+                frame_times.append(end)
+                if len(frame_times) == 10:
+                    # print FPS every 10 frames: 10 / time for last 10 frames
+                    print(f"\rFPS: {10 / (frame_times[-1] - frame_times[0]):.2f}. Casting area: ({capture_rect[0]}, {capture_rect[1]}) to ({capture_rect[2]}, {capture_rect[3]}", end='')
+                    # reset the frame times
+                    frame_times.clear()
+
+    cast_thread = threading.Thread(target=cast)
+    cast_thread.start()
+
     try:
         while True:
-            msg = win32gui.PumpWaitingMessages()
-            if msg:
-                win32gui.TranslateMessage(msg)
-                win32gui.DispatchMessage(msg)
-            else:
-                break
-
-            start_time = time.time()
-
-            # Capture the selected screen
-            rgb_array = screen_capture.capture_window_content(capture_rect, led_matrix_shape)
-            if rgb_array is None:
-                continue
-            # Update the LED matrix via WLED in real-time
-            pixel_writer.update_pixels(rgb_array)
-
-            end_time = time.time()
-
-            elapsed_time = end_time - start_time
-            # Delay to cap the update rate to 40Hz, accounting for the time taken by the operations
-            time.sleep(max(1/20- elapsed_time, 0))
-            # Update the terminal output for FPS
-            fps_output = f"\rFPS: {1 / (time.time() - start_time):.2f}. Time for frame: {elapsed_time * 1000:.2f}ms"
-            print(fps_output.ljust(80))
-            capture_output = f"\rCapturing aread: ({capture_rect[0]}, {capture_rect[1]}) to ({capture_rect[2]}, {capture_rect[3]})"
-            print(capture_output.ljust(80))
-            print(f"\033[4A", end="")
+            time.sleep(1)
     except KeyboardInterrupt:
         print("\nScreen casting stopped by user...")
-    except Exception as e:
-        print(f"\nAn error occurred: {e}")
 
+    stop_casting_event.set()
     win32gui.DestroyWindow(gui_hwnd)
-    keyboard_listener.stop()
-    keyboard_listener.join()
 
 if __name__ == "__main__":
     main()
