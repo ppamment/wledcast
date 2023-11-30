@@ -6,7 +6,6 @@ import wled_discovery
 import screen_capture
 import user_interface as ui
 from pixel_writer import PixelWriter
-import cv2
 
 
 def main():
@@ -31,6 +30,11 @@ def main():
 
     try:
         while True:
+            msg = win32gui.GetMessage(None, 0, 0)
+            if msg == 0 or msg == -1:
+                break
+            win32gui.TranslateMessage(msg)
+            win32gui.DispatchMessage(msg)
             start_time = time.time()
 
             # Capture the selected screen
@@ -40,15 +44,11 @@ def main():
             # Update the LED matrix via WLED in real-time
             pixel_writer.update_pixels(rgb_array)
 
-            # Show a live preview on the computer screen
-            cv2.imshow('Live View', cv2.cvtColor(rgb_array, cv2.COLOR_RGB2BGR))
-            cv2.waitKey(1)
-
             end_time = time.time()
 
             elapsed_time = end_time - start_time
             # Delay to cap the update rate to 40Hz, accounting for the time taken by the operations
-            time.sleep(max(1/25- elapsed_time, 0))
+            time.sleep(max(1/20- elapsed_time, 0))
             # Update the terminal output for FPS
             fps_output = f"\rFPS: {1 / (time.time() - start_time):.2f}. Time for frame: {elapsed_time * 1000:.2f}ms"
             print(fps_output.ljust(80))
@@ -56,7 +56,7 @@ def main():
             print(capture_output.ljust(80))
             print(f"\033[4A", end="")
     except KeyboardInterrupt:
-        print("\nExiting...\n...\n...")
+        print("\nScreen casting stopped by user...")
     except Exception as e:
         print(f"\nAn error occurred: {e}")
 
