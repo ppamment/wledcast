@@ -31,7 +31,7 @@ def main():
     try:
         while True:
             msg = win32gui.GetMessage(None, 0, 0)
-            if msg[1] == 0 or msg[1] == -1:
+            if msg[0] == 0 or msg[0] == -1:
                 break
             win32gui.TranslateMessage(msg)
             win32gui.DispatchMessage(msg)
