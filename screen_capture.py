@@ -43,27 +43,14 @@ def select_window() -> int:
 
     return windows[choice]["hwnd"]
 
-
-def get_scaling_factor(hwnd):
-    user32 = ctypes.WinDLL('user32.dll')
-
-    # The standard DPI setting in Windows is 96 DPI.
-    # The real DPI can be retrieved using GetDpiForWindow
-    # https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdpiforwindow
-    scaling_factor = user32.GetDpiForWindow(hwnd) / 96.0
-
-    return scaling_factor
-
-
 def get_capture_rect(hwnd, target_resolution):
-    scaling_factor = 1
     client = win32gui.GetClientRect(hwnd)
     client_left_top = win32gui.ClientToScreen(hwnd, (0, 0))
     client_rect = [
-        int(client_left_top[0] * scaling_factor),
-        int(client_left_top[1] * scaling_factor),
-        int((client_left_top[0] + client[2]) * scaling_factor),
-        int((client_left_top[1] + client[3]) * scaling_factor),
+        client_left_top[0],
+        client_left_top[1],
+        client_left_top[0] + client[2],
+        client_left_top[1] + client[3],
     ]
     width = client_rect[2] - client_rect[0]
     height = client_rect[3] - client_rect[1]
@@ -77,15 +64,15 @@ def get_capture_rect(hwnd, target_resolution):
     if client_aspect_ratio > target_aspect_ratio:
         # Crop the width of the client rectangle to match the aspect ratio of the resolution
         new_width = int(height * target_aspect_ratio)
-        center_x = client_rect[0] + client_rect[2] // 2
-        client_rect[0] = center_x - new_width // 2
-        client_rect[2] = center_x + new_width // 2
+        center_x = (client_rect[0] + client_rect[2]) // 2
+        client_rect[0] = center_x - (new_width // 2)
+        client_rect[2] = center_x + (new_width // 2)
     else:
         # Crop the height of the client rectangle to match the aspect ratio of the resolution
         new_height = int(width / target_aspect_ratio)
-        center_y = client_rect[1] + client_rect[3] // 2
-        client_rect[1] = center_y - new_height // 2
-        client_rect[3] = center_y + new_height // 2
+        center_y = (client_rect[1] + client_rect[3]) // 2
+        client_rect[1] = center_y - (new_height // 2)
+        client_rect[3] = center_y + (new_height // 2)
 
     return client_rect
 
@@ -94,7 +81,6 @@ def capture_window_content( window_rect: list[int], resolution: tuple[int, int])
         return capture_win32(window_rect, resolution)
     except Exception as e:
         print(f"\nAn error occurred: {e}")
-        raise e
         return None
 
 def capture_win32(window_rect, resolution):
