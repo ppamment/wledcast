@@ -45,7 +45,7 @@ def select_window() -> int:
 
 def get_capture_rect(hwnd, target_resolution):
     client = win32gui.GetClientRect(hwnd)
-    client_left_top = win32gui.ClientToScreen(hwnd, (0, 0))
+    client_left_top = win32gui.ClientToScreen(hwnd, (0, 0))  # Ensure this is a tuple
     client_rect = [
         client_left_top[0],
         client_left_top[1],
