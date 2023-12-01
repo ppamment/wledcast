@@ -81,65 +81,52 @@ def init_keybindings(hwnd, capture_rect) -> keyboard.Listener:
                 if not keyboard.Key.ctrl in keys_pressed:
                     keys_pressed.append(keyboard.Key.ctrl)
                     return
-                elif key.char == "c":
-                    listener.stop()
 
             if key in [keyboard.Key.alt_l, keyboard.Key.alt_r, keyboard.Key.alt, keyboard.Key.alt_gr]:
                 if not keyboard.Key.alt in keys_pressed:
                     keys_pressed.append(keyboard.Key.alt)
                     return
 
-
-            if key in keys_pressed and key in [keyboard.Key.right, keyboard.Key.left, keyboard.Key.up, keyboard.Key.down]:
-                # accelerate on hold
-                move_px = min(move_px + 3, move_px_max)
+            # accelerate on hold
+            if key in [keyboard.Key.right, keyboard.Key.left, keyboard.Key.up, keyboard.Key.down]:
+                if key in keys_pressed:
+                    move_px = min(move_px + 3, move_px_max)
+                else:
+                    keys_pressed.append(key)
 
             # alt + arrow key resizes the capture area
             if keyboard.Key.alt in keys_pressed:
                 if key == keyboard.Key.right:
                     capture_rect[2] += move_px  # Increase width
                     capture_rect[3] += int(move_px / aspect)
-                    if not keyboard.Key.right in keys_pressed:
-                        keys_pressed.append(keyboard.Key.right)
                 elif key == keyboard.Key.left and capture_rect[2] > capture_rect[0] + 2 * move_px and capture_rect[3] > capture_rect[1] + 2 * move_px:
                     capture_rect[2] -= move_px  # Decrease width
                     capture_rect[3] -= int(move_px / aspect)
-                    if not keyboard.Key.left in keys_pressed:
-                        keys_pressed.append(keyboard.Key.left)
                 elif key == keyboard.Key.up and capture_rect[3] > capture_rect[1] + 2 * move_px and capture_rect[2] > capture_rect[0] + 2 * move_px:
                     capture_rect[3] -= move_px  # Decrease height
                     capture_rect[2] -= int(move_px * aspect)
-                    if not keyboard.Key.up in keys_pressed:
-                        keys_pressed.append(keyboard.Key.up)
                 elif key == keyboard.Key.down:
                     capture_rect[3] += move_px  # Increase height
                     capture_rect[2] += int(move_px * aspect)
-                    if not keyboard.Key.down in keys_pressed:
-                        keys_pressed.append(keyboard.Key.down)
                 else:
                     return
             # Ctrl + arrow key moves the capture area
-            elif keyboard.Key.ctrl in keys_pressed:
+            if keyboard.Key.ctrl in keys_pressed:
                 if key == keyboard.Key.right:
                     capture_rect[0] += move_px  # Move right
                     capture_rect[2] += move_px  # Move right
-                    if not keyboard.Key.right in keys_pressed:
-                        keys_pressed.append(keyboard.Key.right)
                 elif key == keyboard.Key.left:
                     capture_rect[0] -= move_px  # Move left
                     capture_rect[2] -= move_px  # Move Left
-                    if not keyboard.Key.left in keys_pressed:
-                        keys_pressed.append(keyboard.Key.left)
                 elif key == keyboard.Key.up:
                     capture_rect[1] -= move_px  # Move up
                     capture_rect[3] -= move_px  # Move up
-                    if not keyboard.Key.up in keys_pressed:
-                        keys_pressed.append(keyboard.Key.up)
                 elif key == keyboard.Key.down:
                     capture_rect[1] += move_px  # Move down
                     capture_rect[3] += move_px  # Move down
-                    if not keyboard.Key.down in keys_pressed:
-                        keys_pressed.append(keyboard.Key.down)
+                elif key.char == "c":
+                    listener.stop()
+                    return False
                 else:
                     return
 
@@ -167,6 +154,8 @@ def init_keybindings(hwnd, capture_rect) -> keyboard.Listener:
         try:
             if key in [keyboard.Key.ctrl_l, keyboard.Key.ctrl_r]:
                 keys_pressed.remove(keyboard.Key.ctrl)
+            elif key in [keyboard.Key.alt_l, keyboard.Key.alt_r, keyboard.Key.alt, keyboard.Key.alt_gr]:
+                keys_pressed.remove(keyboard.Key.alt)
             elif key in keys_pressed:
                 keys_pressed.remove(key)
                 move_px = move_px_min
@@ -176,3 +165,78 @@ def init_keybindings(hwnd, capture_rect) -> keyboard.Listener:
     listener = keyboard.Listener(on_press=on_press, on_release=on_release)
 
     return listener
+
+# config = {
+#     "sharpen": 0.3,
+#     "saturation": 1.1,
+#     "brightness": 0.17,
+#     "contrast": 1.4,
+#     "balance": {
+#         "r": 1,
+#         "g": 0.85,
+#         "b": 0.45
+#     }
+# }
+#
+# def edit_config(screen, config):
+#     def update_form():
+#         # Update form values from config
+#         form_data["sharpen"].value = str(config["sharpen"])
+#         form_data["saturation"].value = str(config["saturation"])
+#         form_data["brightness"].value = str(config["brightness"])
+#         form_data["contrast"].value = str(config["contrast"])
+#         form_data["balance_r"].value = str(config["balance"]["r"])
+#         form_data["balance_g"].value = str(config["balance"]["g"])
+#         form_data["balance_b"].value = str(config["balance"]["b"])
+#
+#     def save_config():
+#         # Save form values to config
+#         try:
+#             config["sharpen"] = float(form_data["sharpen"].value)
+#             config["saturation"] = float(form_data["saturation"].value)
+#             config["brightness"] = float(form_data["brightness"].value)
+#             config["contrast"] = float(form_data["contrast"].value)
+#             config["balance"]["r"] = float(form_data["balance_r"].value)
+#             config["balance"]["g"] = float(form_data["balance_g"].value)
+#             config["balance"]["b"] = float(form_data["balance_b"].value)
+#         except ValueError:
+#             pass  # Handle invalid float conversion
+#
+#     def exit_app():
+#         raise StopApplication("User requested exit")
+#
+#     frame = Frame(screen, int(screen.height * 2 // 3), int(screen.width * 2 // 3), hover_focus=True, title="Edit Configuration")
+#     layout = Layout([1], fill_frame=True)
+#     frame.add_layout(layout)
+#
+#     # Create form fields
+#     form_data = {
+#         "sharpen": Text("Sharpen:", "sharpen"),
+#         "saturation": Text("Saturation:", "saturation"),
+#         "brightness": Text("Brightness:", "brightness"),
+#         "contrast": Text("Contrast:", "contrast"),
+#         "balance_r": Text("Balance R:", "balance_r"),
+#         "balance_g": Text("Balance G:", "balance_g"),
+#         "balance_b": Text("Balance B:", "balance_b"),
+#     }
+#
+#     for name, field in form_data.items():
+#         layout.add_widget(field)
+#
+#     layout.add_widget(Button("Save", save_config))
+#     layout.add_widget(Button("Exit", exit_app))
+#
+#     frame.fix()
+#
+#     update_form()
+#
+#     while True:
+#         screen.draw_next_frame(repeat=False)
+#         event = screen.get_event()
+#         if isinstance(event, KeyboardEvent):
+#             if event.key_code in [Screen.KEY_ESCAPE, ord('q'), ord('Q')]:
+#                 return
+#             else:
+#                 frame.process_event(event)
+#
+# Screen.wrapper(edit_config, arguments=[config])
