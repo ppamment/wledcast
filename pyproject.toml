@@ -1,0 +1,49 @@
+[project]
+name = 'wledcast'
+version = '1.0.0'
+description = 'Cast a screen to WLED'
+authors = [{name = "Paul Pamment", email = "p.pamment@gmail.com"}]
+license = {file = "LICENSE"}
+readme = "README.md"
+
+dependencies = [
+    "asciimatics>=1.15,<2.0",
+    "numpy>=1.26,<2.0",
+    "opencv-python>=4.8,<5.0",
+    "pywin32>=306",
+    "pynput>=1.7",
+    "pywin32>=306",
+    "requests>=2.31.0,<3.0",
+    "zeroconf>=0.127.0,<1",
+    "zeroconf>=0.127.0,<1"
+]
+
+[metadata]
+name = "wledcast"
+version = "1.0.0"
+author = "Paul Pamment"
+author_email = "p.pamment@gmail.com"
+description = "Cast your computer screen to WLED"
+long_description = "file: README.md"
+long_description_content_type = "text/markdown"
+url = "https://github.com/ppamment/wledcast"
+classifiers = """
+    Programming Language :: Python :: 3
+    License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+    Operating System :: Windows
+"""
+
+[project.optional-dependencies]
+dxcam = ["dxcam>=0.0.5"]
+pillow = ["Pillow>=9.0.0"]
+
+[project.scripts]
+wledcast = 'wledcast.main:main'
+
+[options]
+python_requires = ">=3.6"
+packages = "find: ."
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
