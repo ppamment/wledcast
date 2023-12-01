@@ -39,17 +39,19 @@ def create_border_window(rect):
 
 def on_paint(hwnd, msg, wparam, lparam):
     hdc, paintStruct = win32gui.BeginPaint(hwnd)
-    pen = win32gui.CreatePen(win32con.PS_INSIDEFRAME, 5, win32api.RGB(255, 0, 0))
     brush = win32gui.CreateSolidBrush(win32api.RGB(0,0,0))
-
-    win32gui.SelectObject(hdc, pen)
     win32gui.SelectObject(hdc, brush)
 
     rect = win32gui.GetClientRect(hwnd)
-    win32gui.Rectangle(hdc, rect[0], rect[1], rect[2], rect[3])
+    for i in range(6):
+        # Draw 5 1px rectangles in from the edge of rect starting colour 255,0,0 getting 1/5 brighter as they move inward
+        # first create and select the pen
+        pen = win32gui.CreatePen(win32con.PS_INSIDEFRAME, 1, win32api.RGB(255, (1-i)*40, (1-i)*40))
+        old_pen = win32gui.SelectObject(hdc, pen)
+        win32gui.Rectangle(hdc, rect[0] + i, rect[1] + i, rect[2] - i, rect[3] - i)
 
-    # Delete the pen
-    win32gui.DeleteObject(pen)
+        win32gui.SelectObject(hdc, old_pen)
+        win32gui.DeleteObject(pen)
     win32gui.DeleteObject(brush)
     win32gui.EndPaint(hwnd, paintStruct)
     return 0
@@ -58,8 +60,9 @@ def move_window(hwnd, rect:list[int]):
     win32gui.MoveWindow(hwnd, rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1], True)
 
 def init_keybindings(hwnd, capture_rect) -> keyboard.Listener:
-    print("Move the capture area with the arrow keys.")
-    print("Ctrl + arrow keys changes the capture area size")
+    print("Ctrl + arrow keys moves the capture area")
+    print("Alt + arrow keys resizes the capture area")
+    print("Ctrl+c closes the program")
 
     keys_pressed = []
     aspect = (capture_rect[2] - capture_rect[0]) / (capture_rect[3] - capture_rect[1])
@@ -73,15 +76,26 @@ def init_keybindings(hwnd, capture_rect) -> keyboard.Listener:
     def on_press(key):
         nonlocal move_px
         try:
-            if key in keys_pressed:
-                # accelerate on hold
-                move_px = min(move_px + 5, move_px_max)
 
-            if key in [keyboard.Key.ctrl_l, keyboard.Key.ctrl_r]:
+            if key in [keyboard.Key.ctrl_l, keyboard.Key.ctrl_r, keyboard.Key.ctrl]:
                 if not keyboard.Key.ctrl in keys_pressed:
                     keys_pressed.append(keyboard.Key.ctrl)
                     return
-            elif keyboard.Key.ctrl in keys_pressed:
+                elif key.char == "c":
+                    listener.stop()
+
+            if key in [keyboard.Key.alt_l, keyboard.Key.alt_r, keyboard.Key.alt, keyboard.Key.alt_gr]:
+                if not keyboard.Key.alt in keys_pressed:
+                    keys_pressed.append(keyboard.Key.alt)
+                    return
+
+
+            if key in keys_pressed and key in [keyboard.Key.right, keyboard.Key.left, keyboard.Key.up, keyboard.Key.down]:
+                # accelerate on hold
+                move_px = min(move_px + 3, move_px_max)
+
+            # alt + arrow key resizes the capture area
+            if keyboard.Key.alt in keys_pressed:
                 if key == keyboard.Key.right:
                     capture_rect[2] += move_px  # Increase width
                     capture_rect[3] += int(move_px / aspect)
@@ -104,29 +118,32 @@ def init_keybindings(hwnd, capture_rect) -> keyboard.Listener:
                         keys_pressed.append(keyboard.Key.down)
                 else:
                     return
-            elif key == keyboard.Key.right:
-                capture_rect[0] += move_px  # Move right
-                capture_rect[2] += move_px  # Move right
-                if not keyboard.Key.right in keys_pressed:
-                    keys_pressed.append(keyboard.Key.right)
-            elif key == keyboard.Key.left:
-                capture_rect[0] -= move_px  # Move left
-                capture_rect[2] -= move_px  # Move Left
-                if not keyboard.Key.left in keys_pressed:
-                    keys_pressed.append(keyboard.Key.left)
-            elif key == keyboard.Key.up:
-                capture_rect[1] -= move_px  # Move up
-                capture_rect[3] -= move_px  # Move up
-                if not keyboard.Key.up in keys_pressed:
-                    keys_pressed.append(keyboard.Key.up)
-            elif key == keyboard.Key.down:
-                capture_rect[1] += move_px  # Move down
-                capture_rect[3] += move_px  # Move down
-                if not keyboard.Key.down in keys_pressed:
-                    keys_pressed.append(keyboard.Key.down)
-            else:
-                return
+            # Ctrl + arrow key moves the capture area
+            elif keyboard.Key.ctrl in keys_pressed:
+                if key == keyboard.Key.right:
+                    capture_rect[0] += move_px  # Move right
+                    capture_rect[2] += move_px  # Move right
+                    if not keyboard.Key.right in keys_pressed:
+                        keys_pressed.append(keyboard.Key.right)
+                elif key == keyboard.Key.left:
+                    capture_rect[0] -= move_px  # Move left
+                    capture_rect[2] -= move_px  # Move Left
+                    if not keyboard.Key.left in keys_pressed:
+                        keys_pressed.append(keyboard.Key.left)
+                elif key == keyboard.Key.up:
+                    capture_rect[1] -= move_px  # Move up
+                    capture_rect[3] -= move_px  # Move up
+                    if not keyboard.Key.up in keys_pressed:
+                        keys_pressed.append(keyboard.Key.up)
+                elif key == keyboard.Key.down:
+                    capture_rect[1] += move_px  # Move down
+                    capture_rect[3] += move_px  # Move down
+                    if not keyboard.Key.down in keys_pressed:
+                        keys_pressed.append(keyboard.Key.down)
+                else:
+                    return
 
+            # make sure we don't move outside the screen
             if capture_rect[0] < 0:
                 capture_rect[2] -= capture_rect[0]
                 capture_rect[0] = 0

@@ -1,16 +1,21 @@
 import time
 import threading
+import argparse
 
 import win32gui
 
-import wled_discovery
+from pixel_writer import PixelWriter
 import screen_capture
 import user_interface as ui
-from pixel_writer import PixelWriter
+import wled_discovery
 
-target_fps = 25
+default_fps = 25
 
 def main():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--fps", type=int, default=default_fps, help="Target FPS")
+    args = parser.parse_args()
     # Discover WLED instances
     wled_instances = wled_discovery.discover(2)
 
@@ -29,10 +34,10 @@ def main():
     # Initialize the pixel writer
     pixel_writer = PixelWriter(selected_wled_host)
 
-    stop_casting_event = threading.Event()
-    frame_times = []
-    def cast():
-        with keyboard_listener:
+    try:
+        stop_casting_event = threading.Event()
+        frame_times = []
+        def cast():
             while not stop_casting_event.is_set():
                 start = time.time()
                 # Capture the selected screen
@@ -45,27 +50,36 @@ def main():
                 end = time.time()
                 dt = end - start
                 # Chill if we're moving too fast
-                if dt < 1/target_fps:
-                    time.sleep(1/target_fps - dt)
+                if dt < 1/args.fps:
+                    time.sleep(1/args.fps - dt)
 
                 frame_times.append(end)
                 if len(frame_times) == 10:
                     # print FPS every 10 frames: 10 / time for last 10 frames
-                    print(f"\rFPS: {10 / (frame_times[-1] - frame_times[0]):.2f}. Casting area: ({capture_rect[0]}, {capture_rect[1]}) to ({capture_rect[2]}, {capture_rect[3]}", end='')
+                    print(f"\rFPS: {10 / (frame_times[-1] - frame_times[0]):.2f}. Casting area: ({capture_rect[0]}, {capture_rect[1]}) to ({capture_rect[2]}, {capture_rect[3]})", end='')
                     # reset the frame times
                     frame_times.clear()
 
-    cast_thread = threading.Thread(target=cast)
-    cast_thread.start()
+        cast_thread = threading.Thread(target=cast)
+        cast_thread.start()
+        keyboard_listener.start()
 
-    try:
+
         while True:
-            time.sleep(1)
+            msg = win32gui.GetMessage(None, 0, 0)
+            if msg[0] > 0:
+                win32gui.TranslateMessage(msg[1])
+                win32gui.DispatchMessage(msg[1])
+            time.sleep(0.01)
     except KeyboardInterrupt:
         print("\nScreen casting stopped by user...")
+    finally:
+        win32gui.DestroyWindow(gui_hwnd)
+        keyboard_listener.stop()
+        stop_casting_event.set()
+        cast_thread.join()
+        keyboard_listener.join()
 
-    stop_casting_event.set()
-    win32gui.DestroyWindow(gui_hwnd)
 
 if __name__ == "__main__":
     main()

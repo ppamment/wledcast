@@ -10,13 +10,14 @@ There are loads of cool visualisations on youtube etc that look good even at rel
 Issues and PRs are welcomed.
 
 ### Features
-- Autodiscovery of WLED devices on your network
+- Autodiscovers WLED devices on your network. Choose which to cast to.
 - Pick a window to cast
-- The aspect ratio of the wled configuration is autodiscovered and applied to the screen area to cast so as not to distort things. (You can adjust it if you need)
-- Filters for saturation, contrast, brightness, sharpness and rgb balance are included. Scale r, g, b down (ie less than 1) if you need sp you as not tohave values overflow and clip. The default values work well for the 16x16 matrices from Aliexoress I have, but experiment as there is no doubt variation
-- Realtime keyboard control for capture area. Arrow keys to move it around, Ctrl + Up/down to enlarge or shrink.
-- There are 4 capture implementations I tried in screen_capture.py, The GDI one is fast enough at around 20hz and unlike the directx implementations supports sealessly moving between screens or capturing from multiple at once. dxcam is slightly faster but does not.
+- The aspect ratio of the wled configuration is autodiscovered and applied to the casting area
+- Filters for saturation, contrast, brightness, sharpness and rgb balance are included. The values can be edited in filter.json during casting. 
+  Scale r, g, b down (ie less than 1) if you need sp you as not to have values overflow and clip. The default values work well for the 16x16 matrices from Aliexoress I have, but experiment as there is no doubt variation
 - The area being cast is clearly displayed with a red border
+- Move and scale the capture area with keyboard arrows realtime
+- Decent performance - I get around 60-65fps with all filters enabled with the fps limiter off. This is really a little too fast for the 512 pixels on each GPIO pin 
 
 ### Installation
 ______

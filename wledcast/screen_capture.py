@@ -1,14 +1,12 @@
 from typing import Any
-import time
 
 import cv2
 import win32gui
 import win32ui
 import win32con
-import ctypes
-from PIL import Image, ImageGrab
-import d3dshot
-import dxcam
+# import ctypes
+# from PIL import Image, ImageGrab
+# import dxcam
 import numpy as np
 
 import image_processor

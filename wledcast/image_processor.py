@@ -5,7 +5,7 @@ import cv2
 
 
 def apply_filters_pillow(image: Image):
-    with open("filter.json", "r") as f:
+    with open("../filter.json", "r") as f:
         filters = json.load(f)
     brightness = ImageEnhance.Brightness(image)
     image = brightness.enhance(filters["brightness"])
@@ -16,7 +16,7 @@ def apply_filters_pillow(image: Image):
     return image
 
 def apply_filters_cv2(img: np.ndarray) -> np.ndarray:
-    with open("filter.json", "r") as f:
+    with open("../filter.json", "r") as f:
         filters = json.load(f)
     # Convert to HSV for color adjustment
     if filters["saturation"] is not None:
