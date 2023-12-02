@@ -1,7 +1,14 @@
 import win32gui
 import win32con
 import win32api
+import threading
+
 from pynput import keyboard
+from asciimatics.screen import Screen
+from asciimatics.widgets import Frame, Layout, Text, Button, Label
+from asciimatics.exceptions import StopApplication
+from asciimatics.event import KeyboardEvent
+from asciimatics.scene import Scene
 
 pen_width = 6
 def create_border_window(rect):
@@ -59,11 +66,7 @@ def on_paint(hwnd, msg, wparam, lparam):
 def move_window(hwnd, rect:list[int]):
     win32gui.MoveWindow(hwnd, rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1], True)
 
-def init_keybindings(hwnd, capture_rect) -> keyboard.Listener:
-    print("Ctrl + arrow keys moves the capture area")
-    print("Alt + arrow keys resizes the capture area")
-    print("Ctrl+c closes the program")
-
+def init_keybindings(hwnd,  capture_rect: list[int], stop_event: threading.Event) -> keyboard.Listener:
     keys_pressed = []
     aspect = (capture_rect[2] - capture_rect[0]) / (capture_rect[3] - capture_rect[1])
 
@@ -166,77 +169,72 @@ def init_keybindings(hwnd, capture_rect) -> keyboard.Listener:
 
     return listener
 
-# config = {
-#     "sharpen": 0.3,
-#     "saturation": 1.1,
-#     "brightness": 0.17,
-#     "contrast": 1.4,
-#     "balance": {
-#         "r": 1,
-#         "g": 0.85,
-#         "b": 0.45
-#     }
-# }
-#
-# def edit_config(screen, config):
-#     def update_form():
-#         # Update form values from config
-#         form_data["sharpen"].value = str(config["sharpen"])
-#         form_data["saturation"].value = str(config["saturation"])
-#         form_data["brightness"].value = str(config["brightness"])
-#         form_data["contrast"].value = str(config["contrast"])
-#         form_data["balance_r"].value = str(config["balance"]["r"])
-#         form_data["balance_g"].value = str(config["balance"]["g"])
-#         form_data["balance_b"].value = str(config["balance"]["b"])
-#
-#     def save_config():
-#         # Save form values to config
-#         try:
-#             config["sharpen"] = float(form_data["sharpen"].value)
-#             config["saturation"] = float(form_data["saturation"].value)
-#             config["brightness"] = float(form_data["brightness"].value)
-#             config["contrast"] = float(form_data["contrast"].value)
-#             config["balance"]["r"] = float(form_data["balance_r"].value)
-#             config["balance"]["g"] = float(form_data["balance_g"].value)
-#             config["balance"]["b"] = float(form_data["balance_b"].value)
-#         except ValueError:
-#             pass  # Handle invalid float conversion
-#
-#     def exit_app():
-#         raise StopApplication("User requested exit")
-#
-#     frame = Frame(screen, int(screen.height * 2 // 3), int(screen.width * 2 // 3), hover_focus=True, title="Edit Configuration")
-#     layout = Layout([1], fill_frame=True)
-#     frame.add_layout(layout)
-#
-#     # Create form fields
-#     form_data = {
-#         "sharpen": Text("Sharpen:", "sharpen"),
-#         "saturation": Text("Saturation:", "saturation"),
-#         "brightness": Text("Brightness:", "brightness"),
-#         "contrast": Text("Contrast:", "contrast"),
-#         "balance_r": Text("Balance R:", "balance_r"),
-#         "balance_g": Text("Balance G:", "balance_g"),
-#         "balance_b": Text("Balance B:", "balance_b"),
-#     }
-#
-#     for name, field in form_data.items():
-#         layout.add_widget(field)
-#
-#     layout.add_widget(Button("Save", save_config))
-#     layout.add_widget(Button("Exit", exit_app))
-#
-#     frame.fix()
-#
-#     update_form()
-#
-#     while True:
-#         screen.draw_next_frame(repeat=False)
-#         event = screen.get_event()
-#         if isinstance(event, KeyboardEvent):
-#             if event.key_code in [Screen.KEY_ESCAPE, ord('q'), ord('Q')]:
-#                 return
-#             else:
-#                 frame.process_event(event)
-#
-# Screen.wrapper(edit_config, arguments=[config])
+def edit_config(screen, config, frame_times, capture_rect):
+    def update_form():
+        # Update form values from config
+        for key, value in config.items():
+            form_data[key].value = str(value)
+
+    def save_config():
+        # Save form values to config
+        try:
+            for key, value in config.items():
+                config[key] = float(form_data[key].value)
+        except ValueError as exc:
+            pass  # Handle invalid float conversion
+
+    def exit_app():
+        raise StopApplication("User requested exit")
+
+    frame = Frame(screen, int(screen.height * 2 // 3), int(screen.width * 2 // 3), hover_focus=True, title="Edit Configuration")
+    layout = Layout([1], fill_frame=True)
+    frame.add_layout(layout)
+
+    # Create form fields
+    form_data = {
+        "sharpen": Text("Sharpen:", "sharpen"),
+        "saturation": Text("Saturation:", "saturation"),
+        "brightness": Text("Brightness:", "brightness"),
+        "contrast": Text("Contrast:", "contrast"),
+        "balance_r": Text("Balance R:", "balance_r"),
+        "balance_g": Text("Balance G:", "balance_g"),
+        "balance_b": Text("Balance B:", "balance_b"),
+    }
+
+    for name, field in form_data.items():
+        layout.add_widget(field)
+
+    layout.add_widget(Button("Save", save_config))
+    layout.add_widget(Button("Exit", exit_app))
+
+    layout.add_widget(Label("Ctrl + arrow keys moves the capture area"))
+    layout.add_widget(Label("Alt + arrow keys moves the capture area"))
+    layout.add_widget(Label("Esc to exit"))
+
+    if len(frame_times) == 10:
+        # print FPS every 10 frames: 10 / time for last 10 frames
+        layout.add_widget(Label(f"Casting ({capture_rect[0]}, {capture_rect[1]}) to ({capture_rect[2]}, {capture_rect[3]} at {10 / (frame_times[-1] - frame_times[0]):.2f}fps.)"))
+        # reset the frame times
+        frame_times.clear()
+
+    frame.fix()
+    update_form()
+
+    # Create a scene with the frame
+    scenes = [Scene([frame], -1)]
+
+    # Set the scenes for the screen
+    screen.set_scenes(scenes)
+
+    while True:
+        screen.draw_next_frame(repeat=False)
+        event = screen.get_event()
+        if isinstance(event, KeyboardEvent):
+            if event.key_code in [Screen.KEY_ESCAPE, ord('q'), ord('Q')]:
+                return
+            else:
+                frame.process_event(event)
+def start_terminal_ui(config, frame_times, capture_rect):
+    def run(screen):
+        edit_config(screen, config, frame_times, capture_rect)
+    Screen.wrapper(run)

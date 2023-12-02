@@ -3,10 +3,18 @@ from PIL import Image, ImageEnhance
 import json
 import cv2
 
+config = {
+    "sharpen": 0.3,
+    "saturation": 1.1,
+    "brightness": 0.17,
+    "contrast": 1.4,
+    "balance_r": 1,
+    "balance_g": 0.85,
+    "balance_b": 0.45
+}
 
 def apply_filters_pillow(image: Image):
-    with open("filter.json", "r") as f:
-        filters = json.load(f)
+    filters = config
     brightness = ImageEnhance.Brightness(image)
     image = brightness.enhance(filters["brightness"])
     color = ImageEnhance.Color(image)
@@ -16,8 +24,7 @@ def apply_filters_pillow(image: Image):
     return image
 
 def apply_filters_cv2(img: np.ndarray) -> np.ndarray:
-    with open("filter.json", "r") as f:
-        filters = json.load(f)
+    filters=config
     # Convert to HSV for color adjustment
     if filters["saturation"] is not None:
         img = filter_saturation(img, filters["saturation"])
@@ -30,8 +37,8 @@ def apply_filters_cv2(img: np.ndarray) -> np.ndarray:
     if filters["contrast"] is not None:
         img = filter_contrast(img, filters["contrast"])
 
-    if filters["balance"] is not None:
-        img = filter_balance(img, filters["balance"])
+    if filters["balance_r"] is not None:
+        img = filter_balance(img, {"r": filters["balance_r"], "g": filters["balance_g"], "b": filters["balance_b"]})
 
     if filters["sharpen"] is not None:
         img = filter_sharpen(img, filters["sharpen"])

@@ -2,14 +2,18 @@ import time
 import threading
 import argparse
 
+import asciimatics.exceptions
+import asciimatics.exceptions as as_exc
+
 import win32gui
 
 from pixel_writer import PixelWriter
 import screen_capture
 import user_interface as ui
 import wled_discovery
+from image_processor import config
 
-default_fps = 25
+default_fps = 1000
 
 def main():
     # Parse command line arguments
@@ -30,12 +34,12 @@ def main():
     capture_rect = screen_capture.get_capture_rect(hwnd, led_matrix_shape)
     # draw a border around the captured area on screen
     gui_hwnd = ui.create_border_window(capture_rect)
-    keyboard_listener = ui.init_keybindings(gui_hwnd, capture_rect)
+    stop_casting_event = threading.Event()
+    keyboard_listener = ui.init_keybindings(gui_hwnd, capture_rect, stop_casting_event)
     # Initialize the pixel writer
     pixel_writer = PixelWriter(selected_wled_host)
 
     try:
-        stop_casting_event = threading.Event()
         frame_times = []
         def cast():
             while not stop_casting_event.is_set():
@@ -54,13 +58,10 @@ def main():
                     time.sleep(1/args.fps - dt)
 
                 frame_times.append(end)
-                if len(frame_times) == 10:
-                    # print FPS every 10 frames: 10 / time for last 10 frames
-                    print(f"\rFPS: {10 / (frame_times[-1] - frame_times[0]):.2f}. Casting area: ({capture_rect[0]}, {capture_rect[1]}) to ({capture_rect[2]}, {capture_rect[3]})", end='')
-                    # reset the frame times
-                    frame_times.clear()
 
         cast_thread = threading.Thread(target=cast)
+        terminal_thread = threading.Thread(target=ui.start_terminal_ui, args=(config, frame_times, capture_rect))
+        terminal_thread.start()
         cast_thread.start()
         keyboard_listener.start()
 
@@ -72,11 +73,16 @@ def main():
                 win32gui.DispatchMessage(msg[1])
             time.sleep(0.01)
     except KeyboardInterrupt:
+        stop_casting_event.set()
+        print("\nScreen casting stopped by user...")
+    except as_exc.StopApplication:
+        stop_casting_event.set()
         print("\nScreen casting stopped by user...")
     finally:
         win32gui.DestroyWindow(gui_hwnd)
         keyboard_listener.stop()
         stop_casting_event.set()
+        terminal_thread.join()
         cast_thread.join()
         keyboard_listener.join()
 
