@@ -3,5 +3,6 @@ requests
 opencv-python
 asciimatics
 zeroconf
-pywin32
-pynput
+wxPython
+keyboard
+pywinctl

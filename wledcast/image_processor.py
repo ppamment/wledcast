@@ -1,7 +1,6 @@
+import cv2
 import numpy as np
 from PIL import Image, ImageEnhance
-import json
-import cv2
 
 config = {
     "sharpen": 0.3,
@@ -10,21 +9,25 @@ config = {
     "contrast": 1.4,
     "balance_r": 1,
     "balance_g": 0.85,
-    "balance_b": 0.45
+    "balance_b": 0.45,
 }
+
 
 def apply_filters_pillow(image: Image):
     filters = config
     brightness = ImageEnhance.Brightness(image)
     image = brightness.enhance(filters["brightness"])
     color = ImageEnhance.Color(image)
-    image = color.enhance(filters['saturation'])
+    image = color.enhance(filters["saturation"])
     contrast = ImageEnhance.Contrast(image)
-    image = contrast.enhance(filters['contrast'])
+    image = contrast.enhance(filters["contrast"])
+    sharpness = ImageEnhance.Sharpness(image)
+    image = sharpness.enhance(filters["sharpen"])
     return image
 
+
 def apply_filters_cv2(img: np.ndarray) -> np.ndarray:
-    filters=config
+    filters = config
     # Convert to HSV for color adjustment
     if filters["saturation"] is not None:
         img = filter_saturation(img, filters["saturation"])
@@ -37,19 +40,28 @@ def apply_filters_cv2(img: np.ndarray) -> np.ndarray:
     if filters["contrast"] is not None:
         img = filter_contrast(img, filters["contrast"])
 
-    if filters["balance_r"] is not None:
-        img = filter_balance(img, {"r": filters["balance_r"], "g": filters["balance_g"], "b": filters["balance_b"]})
-
     if filters["sharpen"] is not None:
         img = filter_sharpen(img, filters["sharpen"])
 
+    if filters["balance_r"] is not None:
+        img = filter_balance(
+            img,
+            {
+                "r": filters["balance_r"],
+                "g": filters["balance_g"],
+                "b": filters["balance_b"],
+            },
+        )
+
     return img
+
 
 def filter_sharpen(img, alpha):
     kernel = np.array([[0, -1, 0], [-1, 4, -1], [0, -1, 0]]) * alpha
-    kernel[1,1] += 1
+    kernel[1, 1] += 1
     img = cv2.filter2D(img, -1, kernel)
     return img
+
 
 def filter_balance(img, alpha):
     # scale the red, green, and blue channels
@@ -57,6 +69,7 @@ def filter_balance(img, alpha):
 
     img = (img * scale).astype(np.uint8)
     return img
+
 
 def filter_contrast(img, alpha):
     # Compute the mean luminance (gray level)
@@ -69,6 +82,7 @@ def filter_contrast(img, alpha):
     enhanced_img = cv2.addWeighted(img, alpha, gray_img, 1 - alpha, 0)
     return enhanced_img
 
+
 def filter_brightness(img, alpha):
     # Create a black image
     black_img = np.zeros_like(img)
@@ -76,6 +90,7 @@ def filter_brightness(img, alpha):
     # Enhance brightness
     enhanced_img = cv2.addWeighted(img, alpha, black_img, 1 - alpha, 0)
     return enhanced_img
+
 
 def filter_saturation(img, alpha):
     # Convert to HSV and split the channels
@@ -102,18 +117,21 @@ def image_to_ascii(image):
     pixels = image.getdata()
     ascii_str = ""
     for pixel_value in pixels:
-        ascii_str += ascii_chars[pixel_value // 32]  # Map the pixel value to ascii_chars
+        ascii_str += ascii_chars[
+            pixel_value // 32
+        ]  # Map the pixel value to ascii_chars
     ascii_str_len = len(ascii_str)
     ascii_img = ""
     for i in range(0, ascii_str_len, width):
-        ascii_img += ascii_str[i:i+width] + "\n"
+        ascii_img += ascii_str[i : i + width] + "\n"
     return ascii_img
+
 
 def show_preview(rgb_array):
     # Show a live view of the downscaled feed on the computer with 24-bit color blocks
     try:
         # Use OpenCV to display the image
-        cv2.imshow('Live View', cv2.cvtColor(rgb_array, cv2.COLOR_RGB2BGR))
+        cv2.imshow("Live View", cv2.cvtColor(rgb_array, cv2.COLOR_RGB2BGR))
 
     except Exception as e:
         print(f"An error occurred during live view: {e}")

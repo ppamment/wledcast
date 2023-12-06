@@ -1,10 +1,11 @@
 import socket
-import requests
 import time
 
-from zeroconf import Zeroconf, ServiceBrowser, ServiceStateChange, ServiceInfo
+import requests
+from zeroconf import ServiceBrowser, ServiceInfo, ServiceStateChange, Zeroconf
 
-def discover(timeout=5):
+
+def discover(timeout: int = 3) -> list[str]:
     # Discover WLED instances on the local network
     def check_wled_on_ip(info: ServiceInfo):
         address = socket.inet_ntoa(info.addresses[0])
@@ -24,19 +25,22 @@ def discover(timeout=5):
             info = zeroconf.get_service_info(service_type, name)
             if info:
                 check_wled_on_ip(info)
+
     try:
-        with ServiceBrowser(zeroconf, "_http._tcp.local.", handlers=[on_service_state_change]) as browser:
+        with ServiceBrowser(
+            zeroconf, "_http._tcp.local.", handlers=[on_service_state_change]
+        ) as browser:
             time.sleep(timeout)
     finally:  # Clean up
         zeroconf.close()
-
 
     if not services:
         print("No WLED instances found on the network.")
         exit(1)
     return services
 
-def select_instance(instances):
+
+def select_instance(instances: list[str]) -> str | None:
     # Ask user which WLED instance to cast to
     if not instances:
         print("No WLED instances available to select.")
@@ -51,24 +55,28 @@ def select_instance(instances):
 
     return instances[selected_index]
 
+
 def get_matrix_shape(host) -> tuple[int, int]:
     # Determine the shape of the LED pixel matrix from WLED
     try:
-        response = requests.get(
-            f"http://{host}:80/json/state")
+        response = requests.get(f"http://{host}:80/json/state")
         data = response.json()
         seg_data = data.get("seg")
         if seg_data is None or not seg_data:
-            print(f"Error: The WLED instance did not return the expected 'seg' data. Response data: {data}")
+            print(
+                f"Error: The WLED instance did not return the expected 'seg' data. Response data: {data}"
+            )
             exit(1)
         # Find the first segment that is turned on
-        on_segment = next((seg for seg in seg_data if seg.get('on')), None)
+        on_segment = next((seg for seg in seg_data if seg.get("on")), None)
         if on_segment is None:
-            print(f"Error: Make sure you have at least one segment turned on and try again. Response data: {data}")
+            print(
+                f"Error: Make sure you have at least one segment turned on and try again. Response data: {data}"
+            )
             exit(1)
-        width = on_segment.get('stop') - on_segment.get('start')
+        width = on_segment.get("stop") - on_segment.get("start")
         try:
-            height = on_segment.get('stopY') - on_segment.get('startY')
+            height = on_segment.get("stopY") - on_segment.get("startY")
         except KeyError:
             height = 1
         return (width, height)
