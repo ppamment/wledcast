@@ -24,9 +24,12 @@ def discover(timeout=5):
             info = zeroconf.get_service_info(service_type, name)
             if info:
                 check_wled_on_ip(info)
+    try:
+        with ServiceBrowser(zeroconf, "_http._tcp.local.", handlers=[on_service_state_change]) as browser:
+            time.sleep(timeout)
+    finally:  # Clean up
+        zeroconf.close()
 
-    with ServiceBrowser(zeroconf, "_http._tcp.local.", handlers=[on_service_state_change]):
-        time.sleep(timeout)
 
     if not services:
         print("No WLED instances found on the network.")
@@ -64,8 +67,10 @@ def get_matrix_shape(host) -> tuple[int, int]:
             print(f"Error: Make sure you have at least one segment turned on and try again. Response data: {data}")
             exit(1)
         width = on_segment.get('stop') - on_segment.get('start')
-        height = on_segment.get('stopY') - on_segment.get('startY')
-
+        try:
+            height = on_segment.get('stopY') - on_segment.get('startY')
+        except KeyError:
+            height = 1
         return (width, height)
     except requests.exceptions.RequestException as e:
         print(f"Error communicating with the WLED instance: {e}")

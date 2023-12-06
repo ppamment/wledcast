@@ -28,9 +28,14 @@ def _get_window_list() -> list[dict[str, int]]:
     return window_list
 
 
-def select_window() -> int:
+def select_window(title = None) -> int:
     # Get the list of open windows
     windows = _get_window_list()  # Get the list of windows as {title: id}
+
+    if title:
+        windows = [window for window in windows if title in window["title"]]
+    if len(windows) == 1:
+        return windows[0]["hwnd"]
     # Ask the user to select a window from a list numbered from 1 upwards
     for i, window in enumerate(windows):
         print(f"{i + 1}: {window['title']}")

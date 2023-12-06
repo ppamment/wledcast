@@ -2,11 +2,13 @@ import win32gui
 import win32con
 import win32api
 import threading
+import time
+from collections import deque
+import logging
 
 from pynput import keyboard
 from asciimatics.screen import Screen
 from asciimatics.widgets import Frame, Layout, Text, Button, Label
-from asciimatics.exceptions import StopApplication
 from asciimatics.event import KeyboardEvent
 from asciimatics.scene import Scene
 
@@ -23,12 +25,12 @@ def create_border_window(rect):
 
     # Create the window
     style = win32con.WS_POPUP
-    hwnd = win32gui.CreateWindowEx(
+    border_window_hwnd = win32gui.CreateWindowEx(
         win32con.WS_EX_TOPMOST | win32con.WS_EX_LAYERED | win32con.WS_EX_TRANSPARENT,
         class_name,
         'Border Window',
         style,
-        rect[0] - pen_width, # note the  -(a//-b) for ceil division
+        rect[0] - pen_width,
         rect[1] - pen_width,
         rect[2] - rect[0] + pen_width*2,
         rect[3] - rect[1] + pen_width*2,
@@ -38,28 +40,37 @@ def create_border_window(rect):
         None
     )
     # Set the window to be transparent with a specific color
-    win32gui.SetLayeredWindowAttributes(hwnd, win32api.RGB(0, 0, 0), 0, win32con.LWA_COLORKEY)
+    win32gui.SetLayeredWindowAttributes(border_window_hwnd, win32api.RGB(0, 0, 0), 0, win32con.LWA_COLORKEY)
 
     # Show the window
-    win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
-    return hwnd
+    win32gui.ShowWindow(border_window_hwnd, win32con.SW_SHOW)
+    return border_window_hwnd
 
 def on_paint(hwnd, msg, wparam, lparam):
+    logging.critical("on_paint called")
+
+    # Start the paint operation
     hdc, paintStruct = win32gui.BeginPaint(hwnd)
-    brush = win32gui.CreateSolidBrush(win32api.RGB(0,0,0))
+
+    brush = win32gui.CreateSolidBrush(win32api.RGB(0, 0, 0))  # Black which is transparent in this window
     win32gui.SelectObject(hdc, brush)
 
-    rect = win32gui.GetClientRect(hwnd)
-    for i in range(6):
-        # Draw 5 1px rectangles in from the edge of rect starting colour 255,0,0 getting 1/5 brighter as they move inward
-        # first create and select the pen
-        pen = win32gui.CreatePen(win32con.PS_INSIDEFRAME, 1, win32api.RGB(255, (1-i)*40, (1-i)*40))
+    # Draw a solid border around the window
+    left, top, right, bottom = win32gui.GetWindowRect(hwnd)
+    logging.critical(f"Rectangle to paint: ({left}, {top}, {right}, {bottom})")
+    for i in range(pen_width):
+        pen = win32gui.CreatePen(win32con.PS_SOLID, 1, win32api.RGB(255, int(255 - (255 * (i+1) / pen_width)), int(255 - (255 * (i + 1) / pen_width))))
         old_pen = win32gui.SelectObject(hdc, pen)
-        win32gui.Rectangle(hdc, rect[0] + i, rect[1] + i, rect[2] - i, rect[3] - i)
-
+        logging.critical(f"New pen: {pen}. Old pen {old_pen}")
+        logging.critical(f"Drawong Rectangle: ({left + i}, {top + i}, {right - i}, {bottom - i})")
+        win32gui.Rectangle(hdc, left + i, top + i, right - i , bottom - i)
+        logging.critical(f"Rectangle drawn")
         win32gui.SelectObject(hdc, old_pen)
         win32gui.DeleteObject(pen)
+
     win32gui.DeleteObject(brush)
+
+    # End the paint operation
     win32gui.EndPaint(hwnd, paintStruct)
     return 0
 
@@ -79,24 +90,25 @@ def init_keybindings(hwnd,  capture_rect: list[int], stop_event: threading.Event
     def on_press(key):
         nonlocal move_px
         try:
-
+            if key == keyboard.Key.esc:
+                stop_event.set()
+                listener.stop()
+                win32gui.PostQuitMessage(0)
+                return False
             if key in [keyboard.Key.ctrl_l, keyboard.Key.ctrl_r, keyboard.Key.ctrl]:
                 if not keyboard.Key.ctrl in keys_pressed:
                     keys_pressed.append(keyboard.Key.ctrl)
                     return
-
             if key in [keyboard.Key.alt_l, keyboard.Key.alt_r, keyboard.Key.alt, keyboard.Key.alt_gr]:
                 if not keyboard.Key.alt in keys_pressed:
                     keys_pressed.append(keyboard.Key.alt)
                     return
-
             # accelerate on hold
             if key in [keyboard.Key.right, keyboard.Key.left, keyboard.Key.up, keyboard.Key.down]:
                 if key in keys_pressed:
                     move_px = min(move_px + 3, move_px_max)
                 else:
                     keys_pressed.append(key)
-
             # alt + arrow key resizes the capture area
             if keyboard.Key.alt in keys_pressed:
                 if key == keyboard.Key.right:
@@ -127,9 +139,6 @@ def init_keybindings(hwnd,  capture_rect: list[int], stop_event: threading.Event
                 elif key == keyboard.Key.down:
                     capture_rect[1] += move_px  # Move down
                     capture_rect[3] += move_px  # Move down
-                elif key.char == "c":
-                    listener.stop()
-                    return False
                 else:
                     return
 
@@ -165,11 +174,11 @@ def init_keybindings(hwnd,  capture_rect: list[int], stop_event: threading.Event
         except ValueError:
             pass
 
-    listener = keyboard.Listener(on_press=on_press, on_release=on_release)
+    listener = keyboard.Listener(on_press=on_press, on_release=on_release, daemon=True)
 
     return listener
 
-def edit_config(screen, config, frame_times, capture_rect):
+def edit_config(screen , config, frame_times: deque, capture_rect, stop_event: threading.Event):
     def update_form():
         # Update form values from config
         for key, value in config.items():
@@ -182,9 +191,6 @@ def edit_config(screen, config, frame_times, capture_rect):
                 config[key] = float(form_data[key].value)
         except ValueError as exc:
             pass  # Handle invalid float conversion
-
-    def exit_app():
-        raise StopApplication("User requested exit")
 
     frame = Frame(screen, int(screen.height * 2 // 3), int(screen.width * 2 // 3), hover_focus=True, title="Edit Configuration")
     layout = Layout([1], fill_frame=True)
@@ -205,36 +211,34 @@ def edit_config(screen, config, frame_times, capture_rect):
         layout.add_widget(field)
 
     layout.add_widget(Button("Save", save_config))
-    layout.add_widget(Button("Exit", exit_app))
 
     layout.add_widget(Label("Ctrl + arrow keys moves the capture area"))
     layout.add_widget(Label("Alt + arrow keys moves the capture area"))
     layout.add_widget(Label("Esc to exit"))
 
-    if len(frame_times) == 10:
-        # print FPS every 10 frames: 10 / time for last 10 frames
-        layout.add_widget(Label(f"Casting ({capture_rect[0]}, {capture_rect[1]}) to ({capture_rect[2]}, {capture_rect[3]} at {10 / (frame_times[-1] - frame_times[0]):.2f}fps.)"))
-        # reset the frame times
-        frame_times.clear()
+    # print FPS: 10 / time for last 10 frames
+    fps_label = Label("Casting ({capture_rect[0]}, {capture_rect[1]}) to ({capture_rect[2]}, {capture_rect[3]}) at ~~~fps")
+    layout.add_widget(fps_label)
 
     frame.fix()
     update_form()
 
     # Create a scene with the frame
     scenes = [Scene([frame], -1)]
-
-    # Set the scenes for the screen
     screen.set_scenes(scenes)
 
-    while True:
+    while not stop_event.is_set():
+        if len(frame_times) >= 10:
+            fps_label.text = f"Casting ({capture_rect[0]}, {capture_rect[1]}) to ({capture_rect[2]}, {capture_rect[3]}) at {round(len(frame_times) / (frame_times[len(frame_times) - 1] - frame_times[0]), 1) if len(frame_times) > 0 else '~~'}fps.)"
         screen.draw_next_frame(repeat=False)
         event = screen.get_event()
         if isinstance(event, KeyboardEvent):
-            if event.key_code in [Screen.KEY_ESCAPE, ord('q'), ord('Q')]:
-                return
-            else:
-                frame.process_event(event)
-def start_terminal_ui(config, frame_times, capture_rect):
+            frame.process_event(event)
+        time.sleep(0.1)
+
+    win32gui.PostQuitMessage(0)
+
+def start_terminal_ui(config, frame_times, capture_rect, stop_event):
     def run(screen):
-        edit_config(screen, config, frame_times, capture_rect)
-    Screen.wrapper(run)
+        edit_config(screen, config, frame_times, capture_rect, stop_event)
+    return Screen.wrapper(run)
