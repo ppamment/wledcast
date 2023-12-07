@@ -4,13 +4,14 @@ import threading
 import time
 from collections import deque
 
-import image_processor
-import keyboard
-import screen_capture
-import user_interface as ui
-import wled_discovery
+from . import image_processor
+from . import keyboard_handler
+from . import screen_capture
+from . import terminal_interface
+from . import user_interface as ui
+from . import wled_discovery
+from .pixel_writer import PixelWriter
 import wx
-from pixel_writer import PixelWriter
 
 logging.basicConfig(
     filename="debug.log",
@@ -96,14 +97,14 @@ def main():
     capture_box = screen_capture.get_capture_box(window, led_matrix_shape)
 
     app = wx.App()
-    frame = ui.TransparentWindow(
+    ui_capture_border = ui.TransparentWindow(
         parent=None,
         title="wledcast",
-        size=(capture_box.width, capture_box.height),
-        pos=(capture_box.left, capture_box.top),
+        size=capture_box.getSize(),
+        pos=capture_box.getPosition(),
         capture_box=capture_box,
     )
-    frame.Show()
+    ui_capture_border.Show()
 
     # Initialize the pixel writer
     frame_times = deque(maxlen=10)
@@ -137,16 +138,16 @@ def main():
     pixel_writer = PixelWriter(selected_wled_host)
     cast_thread = threading.Thread(target=cast, daemon=True)
     terminal_thread = threading.Thread(
-        target=ui.start_terminal_ui,
+        target=terminal_interface.start_terminal_ui,
         args=(image_processor.config, frame_times, capture_box, stop_event),
         daemon=True,
     )
-    on_key_event = ui.setup_keybinds(frame, capture_box, stop_event)
+    keyboard_handler.setup_keybinds(ui_capture_border, capture_box, stop_event)
 
     try:
         terminal_thread.start()
         cast_thread.start()
-        keyboard.hook(on_key_event)
+
         app.MainLoop()
     except Exception as e:
         print(f"Unexpected error: {e}")

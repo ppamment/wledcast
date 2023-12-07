@@ -1,6 +1,7 @@
 import dxcam
-import image_processor
 import cv2
+
+from . import image_processor
 
 camera = dxcam.create()
 

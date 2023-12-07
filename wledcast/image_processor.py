@@ -1,18 +1,12 @@
+import json
+import os
 import cv2
 import numpy as np
 import wx
 from PIL import Image, ImageEnhance
 
-config = {
-    "sharpen": 0.3,
-    "saturation": 1.1,
-    "brightness": 0.17,
-    "contrast": 1.4,
-    "balance_r": 1,
-    "balance_g": 0.85,
-    "balance_b": 0.45,
-}
-
+with open(os.path.join(os.path.dirname(__file__), "filter.json")) as f:
+    config = json.load(f)
 
 def apply_filters_pillow(image: Image):
     filters = config

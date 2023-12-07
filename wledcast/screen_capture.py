@@ -1,20 +1,12 @@
-from dataclasses import dataclass
 from typing import Union
 
-import image_processor
+from . import image_processor
+from .model import Box
 
 import mss
 import numpy as np
 import pywinctl
 from PIL import Image
-
-
-@dataclass
-class Box:
-    left: int
-    top: int
-    width: int
-    height: int
 
 
 def select_window(title=None) -> pywinctl.Window:
