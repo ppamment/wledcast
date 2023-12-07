@@ -20,6 +20,7 @@ Issues and PRs are welcomed. This is still alpha at the moment. I have only real
 - Decent performance - I get around 60-65fps with all filters enabled with the fps limiter off. This is really a little too fast for WS2812bs if you have a quite a few on a pin, so the fps is limited to 25 by default
 
 ### Options (none required)
+| Option                      | Desctription
 |:----------------------------|:-------------------------------------------------------------------------------------------------------------------|
 | --title TITLE               | Cast the window whost title contains TITLE                                                                         |
 | --fps FPS                   | Limit fps to FPS. 500 LEDS per GPIO is stable up to around 40Hz on and ESP32-WROOM for me but YMMV                 |
