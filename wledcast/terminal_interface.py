@@ -1,3 +1,5 @@
+import json
+import os.path
 import threading
 import time
 from collections import deque
@@ -26,6 +28,8 @@ def config_editor(
         try:
             for key, value in config.items():
                 config[key] = float(form_data[key].value)
+            with open(os.path.join(os.path.dirname(__file__), "filter.json"), "w") as f:
+                f.write(json.dumps(config))
         except ValueError as exc:
             pass  # Handle invalid float conversion
 

@@ -18,6 +18,9 @@ dependencies = [
     "pywinctl>=0.3,<1.0",
 ]
 
+[project.optional-dependencies]
+dxcam = ["dxcam>=0.0.5"]
+
 [metadata]
 name = "wledcast"
 version = "0.1.0"
@@ -31,10 +34,12 @@ classifiers = """
     Programming Language :: Python :: 3
     License :: OSI Approved :: GNU General Public License v3 (GPLv3)
     Operating System :: Windows
+    Operating System :: MacOS :: MacOS X
+    Operating System :: POSIX :: Linux
 """
 
-[project.optional-dependencies]
-dxcam = ["dxcam>=0.0.5"]
+[tool.setuptools.package-data]
+wledcast = ["filter.json"]
 
 [project.scripts]
 wledcast = 'wledcast.main:main'
@@ -46,21 +51,4 @@ packages = "find: ."
 [build-system]
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
-
-[tool.bumpver]
-current_version = "2023.1001-alpha"
-version_pattern = "MAJOR.MINOR.PATCH"
-commit_message = "bump version {old_version} -> {new_version}"
-tag_message = "{new_version}"
-tag_scope = "default"
-pre_commit_hook = ""
-post_commit_hook = ""
-commit = true
-tag = true
-push = true
-
-[tool.bumpver.file_patterns]
-"pyproject.toml" = [
-    'version = "{version}"',
-]
 
