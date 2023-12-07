@@ -6,3 +6,4 @@ zeroconf
 wxPython
 keyboard
 pywinctl
+pillow>=10.0

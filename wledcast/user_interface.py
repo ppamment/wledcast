@@ -3,7 +3,6 @@ import time
 from collections import deque
 
 import keyboard
-import pywinbox
 import screen_capture
 import wx
 from asciimatics.event import KeyboardEvent
@@ -221,7 +220,7 @@ def setup_keybinds(
     return on_key_event
 
 
-def edit_config(
+def config_editor(
     screen,
     config,
     frame_times: deque,
@@ -245,7 +244,6 @@ def edit_config(
         screen,
         int(screen.height * 2 // 3),
         int(screen.width * 2 // 3),
-        hover_focus=True,
         title="Edit Configuration",
     )
     frame.set_theme("green")
@@ -289,7 +287,7 @@ def edit_config(
 
     while not stop_event.is_set():
         if len(frame_times) >= 10:
-            fps_label.text = f"Casting {capture_box.width}x{capture_box.height} ({capture_box.left}, {capture_box.top}) to ({capture_box.left + capture_box.width}, {capture_box.top + capture_box.height}) at ~~~fps at {round(len(frame_times) / (frame_times[len(frame_times) - 1] - frame_times[0]), 1) if len(frame_times) > 0 else '~~'}fps.)"
+            fps_label.text = f"Casting {capture_box.width}x{capture_box.height} ({capture_box.left}, {capture_box.top}) to ({capture_box.left + capture_box.width}, {capture_box.top + capture_box.height}) at {round(len(frame_times) / (frame_times[len(frame_times) - 1] - frame_times[0]), 1) if len(frame_times) > 0 else '~~'}fps.)"
         screen.draw_next_frame(repeat=False)
         event = screen.get_event()
         if isinstance(event, KeyboardEvent):
@@ -304,7 +302,7 @@ def start_terminal_ui(
     stop_event: threading.Event,
 ):
     def run(screen: Screen):
-        edit_config(screen, config, frame_times, capture_box, stop_event)
+        config_editor(screen, config, frame_times, capture_box, stop_event)
 
     Screen.wrapper(run)
     return 0

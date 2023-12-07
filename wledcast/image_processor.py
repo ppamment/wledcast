@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import wx
 from PIL import Image, ImageEnhance
 
 config = {
@@ -126,12 +127,27 @@ def image_to_ascii(image):
         ascii_img += ascii_str[i : i + width] + "\n"
     return ascii_img
 
+def stretch_array_repeat(arr, stretch_factor):
+    # Repeat the array elements along the column axis
+    stretched_arr = np.repeat(arr, stretch_factor, axis=0)
+    # Repeat the array elements along the row axis
+    stretched_arr = np.repeat(stretched_arr, stretch_factor, axis=1)
+    return stretched_arr
 
-def show_preview(rgb_array):
+def show_preview(rgb_array, resolution):
     # Show a live view of the downscaled feed on the computer with 24-bit color blocks
+    # Scaling by an integer will keep the pixelated effect but make it visible
+    x, y = resolution
+    monitor_x, monitor_y = wx.GetDisplaySize()
+    # find the largest integer scaling factpr that will fit in the monitor in both dimensions
+    scaling_factor = min(monitor_x // x, monitor_y // y)
+    bgr_array = cv2.cvtColor(rgb_array, cv2.COLOR_RGB2BGR)
+    if scaling_factor > 1:
+        bgr_array = stretch_array_repeat(bgr_array, scaling_factor)
     try:
         # Use OpenCV to display the image
-        cv2.imshow("Live View", cv2.cvtColor(rgb_array, cv2.COLOR_RGB2BGR))
+        cv2.imshow("Live View", bgr_array)
+        cv2.waitKey(1)
 
     except Exception as e:
         print(f"An error occurred during live view: {e}")

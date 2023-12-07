@@ -10,12 +10,12 @@ dependencies = [
     "asciimatics>=1.15,<2.0",
     "numpy>=1.26,<2.0",
     "opencv-python>=4.8,<5.0",
-    "pywin32>=306",
-    "pynput>=1.7",
-    "pywin32>=306",
     "requests>=2.31.0,<3.0",
     "zeroconf>=0.127.0,<1",
-    "zeroconf>=0.127.0,<1"
+    "pillow-simd>=10.0,
+    "wxpython>=4.2,<5.0",
+    "keyboard>=0.13.5,<1.0",
+    "pywinctl>=0.5.0,<1.0",
 ]
 
 [metadata]
@@ -35,7 +35,6 @@ classifiers = """
 
 [project.optional-dependencies]
 dxcam = ["dxcam>=0.0.5"]
-pillow = ["Pillow>=9.0.0"]
 
 [project.scripts]
 wledcast = 'wledcast.main:main'

@@ -1,7 +1,8 @@
 from dataclasses import dataclass
+from typing import Union
 
 import image_processor
-# import dxcam # this is a faster version using directx. There is a function to use it commented below
+
 import mss
 import numpy as np
 import pywinctl
@@ -75,9 +76,11 @@ def get_capture_box(window: pywinctl.Window, target_resolution) -> Box:
 
 
 def capture_window_content(
-    window_box: Box, resolution: tuple[int, int]
+    window_box: Box, resolution: tuple[int, int], capture_function: Union[callable, None] = None
 ) -> np.ndarray | None:
     try:
+        if capture_function is not None:
+            return capture_function(window_box, resolution)
         # noinspection PyTypeChecker
         return capture_mss(window_box, resolution)
     except Exception as e:
@@ -97,12 +100,3 @@ def capture_mss(window_box: Box, resolution):
             rgb_array
         )  # apply filters after resizing
         return rgb_array
-
-
-# camera = dxcam.create()
-# def capture_dxcam(window_rect, resolution):
-#     rgb_array = camera.grab(region=window_rect)
-#     downscaled_array = cv2.resize(rgb_array, resolution, interpolation=cv2.INTER_AREA)
-#     rgb_array = image_processor.apply_filters_cv2(downscaled_array)
-#
-#     return rgb_array

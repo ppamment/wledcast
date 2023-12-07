@@ -4,12 +4,12 @@ import threading
 import time
 from collections import deque
 
+import image_processor
 import keyboard
 import screen_capture
 import user_interface as ui
 import wled_discovery
 import wx
-from image_processor import config
 from pixel_writer import PixelWriter
 
 logging.basicConfig(
@@ -36,23 +36,57 @@ def get_arguments():
         default=3,
         help="Seconds to wait for WLED instance discovery",
     )
+    parser.add_argument(
+        "--output-resolution",
+        type=str,
+        default=None,
+        help="Specify the output resolution rather than discovering from WLED",
+    )
+    parser.add_argument(
+        "--live-preview",
+        default=False,
+        help="Show a live preview of the WLED output  the computer screen",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--dxcam",
+        default=False,
+        action="store_true",
+        help="Use DirectX Capture (faster, but only for Windows and primary monitor)",
+    )
+    parser.add_argument(
+        "--host",
+        default=None,
+        type=str,
+        help="Specify the IP address of the WLED instance to cast to",
+    )
     args = parser.parse_args()
     return args
 
 
 def main():
     args = get_arguments()
-    # Discover WLED instances
-    wled_instances = wled_discovery.discover(args.search_timeout)
-    if len(wled_instances) == 0:
-        return 1
+    if args.dxcam:
+        from dxcam_capture import capture_dxcam
+        capture_function = capture_dxcam
+    else:
+        capture_function = None
 
-    # Ask user which WLED instance to cast to
-    selected_wled_host = (
-        wled_discovery.select_instance(wled_instances)
-        if len(wled_instances) > 1
-        else wled_instances[0]
-    )
+    if args.host is not None:
+        selected_wled_host = args.host
+    else:
+        # Discover WLED instances
+        wled_instances = wled_discovery.discover(args.search_timeout)
+        if len(wled_instances) == 0:
+            return 1
+
+        # Ask user which WLED instance to cast to
+        selected_wled_host = (
+            wled_discovery.select_instance(wled_instances)
+            if len(wled_instances) > 1
+            else wled_instances[0]
+        )
+
     # Determine the shape of the LED pixel matrix from WLED
     led_matrix_shape = wled_discovery.get_matrix_shape(selected_wled_host)
     # get the coordinates to capture, use a list to make it mutable
@@ -74,16 +108,20 @@ def main():
     # Initialize the pixel writer
     frame_times = deque(maxlen=10)
 
+
+
     def cast():
         while not stop_event.is_set():
             start = time.time()
             # Capture the selected screen
             rgb_array = screen_capture.capture_window_content(
-                capture_box, led_matrix_shape
+                capture_box, led_matrix_shape, capture_function
             )
             if rgb_array is None:
                 print("**Dropped frame**".ljust(40))
                 continue
+            if args.live_preview:
+                image_processor.show_preview(rgb_array, led_matrix_shape)
             # Update the LED matrix via WLED in real-time
             pixel_writer.update_pixels(rgb_array)
             end = time.time()
@@ -100,7 +138,7 @@ def main():
     cast_thread = threading.Thread(target=cast, daemon=True)
     terminal_thread = threading.Thread(
         target=ui.start_terminal_ui,
-        args=(config, frame_times, capture_box, stop_event),
+        args=(image_processor.config, frame_times, capture_box, stop_event),
         daemon=True,
     )
     on_key_event = ui.setup_keybinds(frame, capture_box, stop_event)
