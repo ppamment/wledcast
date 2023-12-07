@@ -77,7 +77,7 @@ def get_matrix_shape(host) -> tuple[int, int]:
         width = on_segment.get("stop") - on_segment.get("start")
         try:
             height = on_segment.get("stopY") - on_segment.get("startY")
-        except KeyError:
+        except Exception:
             height = 1
         return (width, height)
     except requests.exceptions.RequestException as e:
