@@ -28,6 +28,7 @@ Issues and PRs are welcomed. This is still alpha at the moment. I have only real
 | --live-preview           | Show the output in a preview pane on the computer                                                                 |
 | --search-timeout TIMEOUT | Timeout for WLED network discovery, defaults to 3s. Increase if your latency is higher and devices are not found. |
 | --dxcam                  | A more performant capture with DirectX, only works on windows with primary monitor I believe                      |
+| --monitor [number]       | Cast a monitor rather than a window. Optionally pass the number, else you'll be asked                             |
 
 To implement:
 --output-resolution     Skip resolution discovery from WLED and use this (format 64x32)
@@ -37,20 +38,19 @@ ______
 ```shell
 pip install wledcast
 ```
-#### From source
+
+#### From source (if you're contributing or need something that isn't on pypi)
 Create and activate a conda/venv, If you aren't sure how, I recommend [micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html)  as it's very lightweight and fast:
 ```shell
 micromamba create -n wledcast -c conda-forge python=3.10
 micromamba activate wledcast
 ```
-
-
-Clone the repo, install dependencies, run
-```
+Clone the repo, install the package (editable), run
+```shell
 git clone https://github.com/ppamment/wledcast.git
 cd wledcast
-python -m pip install -r requirements.txt
-python main.py
+pip install -e .
+wledcast
 ```
 
 ### Licence

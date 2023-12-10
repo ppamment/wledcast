@@ -61,6 +61,12 @@ def get_arguments():
         type=str,
         help="Specify the IP address of the WLED instance to cast to",
     )
+    parser.add_argument(
+        '--monitor',
+        nargs='?',
+        const=-1,
+        type=int,
+    )
     args = parser.parse_args()
     return args
 
@@ -91,7 +97,7 @@ def main():
     # Determine the shape of the LED pixel matrix from WLED
     led_matrix_shape = wled_discovery.get_matrix_shape(selected_wled_host)
     # get the coordinates to capture, use a list to make it mutable
-    window = screen_capture.select_window(title=args.title)
+    window = screen_capture.select_window(monitor=args.monitor, title=args.title)
 
     # get the capture coordinates: dict[left, top, width, height]
     capture_box = screen_capture.get_capture_box(window, led_matrix_shape)

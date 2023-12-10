@@ -6,10 +6,30 @@ from .model import Box
 import mss
 import numpy as np
 import pywinctl
+import pymonctl
 from PIL import Image
 
 
-def select_window(title=None) -> pywinctl.Window:
+def select_from_list(items: list[Union[pywinctl.Window, pymonctl.Monitor]], description: str) -> Union[pywinctl.Window, pymonctl.Monitor]:
+    if len(items) == 1:
+        return items[0]
+
+    for i, item in enumerate(items):
+        print(f"{i + 1}: {getattr(item, description)}")
+    choice = int(input("Enter the number of the item to capture: ")) - 1
+    if choice < 0 or choice >= len(items):
+        print("Invalid selection. Please try again.")
+        return select_from_list(items, description)
+    return items[choice]
+
+def select_window(monitor: int = None, title: str = None) -> Union[pywinctl.Window, pymonctl.Monitor]:
+
+    if monitor is not None:
+        monitors = pymonctl.getAllMonitors()
+        if 0 <= monitor < len(monitors):
+            return monitors[monitor]
+        return select_from_list(monitors, "name")
+
     # Get the list of open windows
     windows: list[pywinctl.Window] = pywinctl.getAllWindows()
     windows = [
@@ -19,21 +39,12 @@ def select_window(title=None) -> pywinctl.Window:
     ]
 
     if title:
-        windows = [window for window in windows if title in window.title]
-    if len(windows) == 1:
-        return windows[0]
-    # Ask the user to select a window from a list numbered from 1 upwards
-    for i, window in enumerate(windows):
-        print(f"{i + 1}: {window.title}")
-    choice = int(input("Enter the number of the window to capture: ")) - 1
-    if choice < 0 or choice >= len(windows):
-        print("Invalid selection. Please try again.")
-        return select_window()
+        windows = [window for window in windows if title in window.title and not window.isActive]
 
-    return windows[choice]
+    return select_from_list(windows, "title")
 
 
-def get_capture_box(window: pywinctl.Window, target_resolution) -> Box:
+def get_capture_box(window: Union[pywinctl.Window, pymonctl.Monitor], target_resolution) -> Box:
     # Get the client rectangle of the window
     client_box = Box(
         **{
