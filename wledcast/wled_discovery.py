@@ -1,3 +1,4 @@
+from typing import Union
 import socket
 import time
 
@@ -40,7 +41,7 @@ def discover(timeout: int = 3) -> list[str]:
     return services
 
 
-def select_instance(instances: list[str]) -> str | None:
+def select_instance(instances: list[str]) -> Union[str, None]:
     # Ask user which WLED instance to cast to
     if not instances:
         print("No WLED instances available to select.")

@@ -15,7 +15,7 @@ def select_window(title=None) -> pywinctl.Window:
     windows = [
         window
         for window in windows
-        if not window.isMinimized and not window._parent and window.title
+        if not window.isMinimized and not window.getParent() and window.title
     ]
 
     if title:
@@ -69,7 +69,7 @@ def get_capture_box(window: pywinctl.Window, target_resolution) -> Box:
 
 def capture_window_content(
     window_box: Box, resolution: tuple[int, int], capture_function: Union[callable, None] = None
-) -> np.ndarray | None:
+) -> Union[np.ndarray, None]:
     try:
         if capture_function is not None:
             return capture_function(window_box, resolution)
