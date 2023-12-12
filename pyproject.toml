@@ -1,10 +1,23 @@
 [project]
 name = 'wledcast'
-version = '0.2.0'
+version = '0.2.1'
 description = 'Cast a screen to WLED'
 authors = [{name = "Paul Pamment", email = "p.pamment@gmail.com"}]
 license = {file = "LICENSE"}
 readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["wled", "cast", "screen", "wledcast", "led", "display", "esp32", "esp8266",
+    "wled-esp32", "wled-esp8266", "monitor", "lighting", "show", "cast-to-wled",
+    "ws2012", "ws2812b", "ws2811", "ws2815", "sk6812", "sk6812b", "neopixel", "neopixels",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: Microsoft :: Windows :: Windows 10",
+    "Operating System :: Microsoft :: Windows :: Windows 11",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: POSIX :: Linux",
+]
 
 dependencies = [
     "asciimatics>=1.15,<2.0",
@@ -19,6 +32,11 @@ dependencies = [
     "zeroconf>=0.127.0",
 ]
 
+[project.urls]
+homepage = "https://github.com/ppamment/wledcast"
+repository = "https://github.com/ppamment/wledcast"
+Bug-Tracker = "https://github.com/ppamment/wledcast/issues"
+
 [project.optional-dependencies]
 dxcam = ["dxcam>=0.0.5"]
 
@@ -28,13 +46,7 @@ author_email = "p.pamment@gmail.com"
 long_description = "file: README.md"
 long_description_content_type = "text/markdown"
 url = "https://github.com/ppamment/wledcast"
-classifiers = """
-    Programming Language :: Python :: 3
-    License :: OSI Approved :: GNU General Public License v3 (GPLv3)
-    Operating System :: Windows
-    Operating System :: MacOS :: MacOS X
-    Operating System :: POSIX :: Linux
-"""
+
 
 [tool.setuptools.package-data]
 wledcast = ["filter.json"]

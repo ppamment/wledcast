@@ -35,18 +35,25 @@ To implement:
 --output-resolution     Skip resolution discovery from WLED and use this (format 64x32)
 ### Installation
 ______
+Requires Python >=3.10. Create and activate a conda/venv, If you aren't sure how, I recommend [micromamba (install here)](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html)  as it's very lightweight and fast:
+```shell
+micromamba create -n wledcast -c conda-forge python=3.11
+micromamba activate wledcast
+```
+
 #### With pip (recommended)
 ```shell
 pip install wledcast
+wledcast
+```
+Or if you are on windows and want to use the DirectX capture method:
+```shell
+pip install wledcast[dxcam]
+wledcast
 ```
 
-#### From source (if you're contributing or need something that isn't on pypi)
-Create and activate a conda/venv, If you aren't sure how, I recommend [micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html)  as it's very lightweight and fast:
-```shell
-micromamba create -n wledcast -c conda-forge python=3.10
-micromamba activate wledcast
-```
-Clone the repo, install the package (editable), run
+#### From source (developers/contributors)
+Clone the repo, install the package (editable):
 ```shell
 git clone https://github.com/ppamment/wledcast.git
 cd wledcast
