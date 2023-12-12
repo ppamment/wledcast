@@ -20,15 +20,16 @@ Issues and PRs are welcomed. This is still alpha at the moment. I have only real
 - Decent performance - I get around 60-65fps with all filters enabled with the fps limiter off. This is really a little too fast for WS2812bs if you have a quite a few on a pin, so the fps is limited to 25 by default
 
 ### Options (none required)
-| Option                   | Desctription                                                                                                      |
-|:-------------------------|:------------------------------------------------------------------------------------------------------------------|
-| --title TITLE            | Cast the window whost title contains TITLE                                                                        |
-| --fps FPS                | Limit fps to FPS. 500 LEDS per GPIO is stable up to around 40Hz on and ESP32-WROOM for me but YMMV                |
-| --host HOST              | Skip network discovery and cast to this IP address                                                                |
-| --live-preview           | Show the output in a preview pane on the computer                                                                 |
-| --search-timeout TIMEOUT | Timeout for WLED network discovery, defaults to 3s. Increase if your latency is higher and devices are not found. |
-| --dxcam                  | A more performant capture with DirectX, only works on windows with primary monitor I believe                      |
-| --monitor [number]       | Cast a monitor rather than a window. Optionally pass the number, else you'll be asked                             |
+| Option                    | Desctription                                                                                                      |
+|:--------------------------|:------------------------------------------------------------------------------------------------------------------|
+| --title TITLE             | Cast the window whost title contains TITLE                                                                        |
+| --fps FPS                 | Limit fps to FPS. 500 LEDS per GPIO is stable up to around 40Hz on and ESP32-WROOM for me but YMMV. Default 30    |
+| --host HOST               | Skip network discovery and cast to this IP address                                                                |
+| --live-preview            | Show the output in a preview pane on the computer                                                                 |
+| --search-timeout TIMEOUT  | Timeout for WLED network discovery, defaults to 3s. Increase if your latency is higher and devices are not found. |
+| --capture-method [METHOD] | Default mss works well on all platforms. dxcam is faster but only supports windows on primary monitor             |
+| --monitor [NUMBER]        | Cast a monitor rather than a window. Optionally pass the monitor number, else you'll be asked                     |
+| --debug                   | Endable debug logs                                                                                                |
 
 To implement:
 --output-resolution     Skip resolution discovery from WLED and use this (format 64x32)
@@ -52,6 +53,13 @@ cd wledcast
 pip install -e .
 wledcast
 ```
+
+### Not working?
+______
+#### ImportError: DLL load failed
+You probably need to install the Visual C++ 2015 runtime. You can find it here:
+
+https://www.microsoft.com/en-us/download/details.aspx?id=53840
 
 ### Licence
 ______

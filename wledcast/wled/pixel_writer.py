@@ -45,3 +45,6 @@ class PixelWriter:
 
     def close_socket(self):
         self.socket.close()
+
+    def __del__(self):
+        self.close_socket()

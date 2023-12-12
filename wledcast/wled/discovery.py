@@ -5,6 +5,7 @@ import time
 import requests
 from zeroconf import ServiceBrowser, ServiceInfo, ServiceStateChange, Zeroconf
 
+from wledcast.model import Size
 
 def discover(timeout: int = 3) -> list[str]:
     # Discover WLED instances on the local network
@@ -57,7 +58,7 @@ def select_instance(instances: list[str]) -> Union[str, None]:
     return instances[selected_index]
 
 
-def get_matrix_shape(host) -> tuple[int, int]:
+def get_matrix_shape(host) -> Size:
     # Determine the shape of the LED pixel matrix from WLED
     try:
         response = requests.get(f"http://{host}:80/json/state")
@@ -80,7 +81,7 @@ def get_matrix_shape(host) -> tuple[int, int]:
             height = on_segment.get("stopY") - on_segment.get("startY")
         except Exception:
             height = 1
-        return (width, height)
+        return Size(width, height)
     except requests.exceptions.RequestException as e:
         print(f"Error communicating with the WLED instance: {e}")
         exit(1)

@@ -1,45 +1,48 @@
 import keyboard
+import logging
 import threading
 import wx
 
-from .model import Box
-from .user_interface import get_virtual_desktop_size
+from wledcast.model import Box
+from wledcast.config import border_size, max_x, max_y
 
-
+logger = logging.getLogger(__name__)
 
 def setup_keybinds(
     frame: wx.Frame, capture_box: Box, stop_event: threading.Event
 ) -> callable:
-    max_x, max_y = get_virtual_desktop_size()
     aspect_ratio = frame.GetSize().GetWidth() / frame.GetSize().GetHeight()
     # Movement and resizing speeds
     speed_increment = 3
-    min_speed = 2
+    min_speed = 1
     max_speed = 50
 
     # Current speed and timers for movement and resizing
     current_speed = {"move": min_speed, "resize": min_speed}
 
     def adjust_position(delta_x: int, delta_y: int):
-        x, y = frame.GetPosition()
-        width, height = frame.GetSize()
-        new_x = max(0, min(max_x - width, x + delta_x))
-        new_y = max(0, min(max_y - height, y + delta_y))
-        capture_box.left += new_x - x
-        capture_box.top += new_y - y
-        wx.CallAfter(frame.SetPosition, (new_x, new_y))
+        delta_x = max(-capture_box.left, min(max_x - (capture_box.left +capture_box.width + 2 * border_size), delta_x))
+        delta_y = max(-capture_box.top, min(max_y - (capture_box.top + capture_box.height + 2 * border_size), delta_y))
+        capture_box.left += delta_x
+        capture_box.top += delta_y
+        logger.info(f"Capture area: {capture_box}")
+        wx.CallAfter(frame.SetPosition, (capture_box.left, capture_box.top))
 
-    def adjust_size(delta_w, delta_h):
-        width, height = frame.GetSize()
-        if delta_w != 0:
-            new_width = max(10, min(max_x, width + delta_w))
-            new_height = max(10, min(max_y, int(new_width / aspect_ratio)))
-        else:
-            new_height = max(10, min(max_x, height + delta_h))
-            new_width = max(10, min(max_y, int(new_height * aspect_ratio)))
-        capture_box.width += new_width - width
-        capture_box.height += new_height - height
-        wx.CallAfter(frame.SetSize, (new_width, new_height))
+    def adjust_size(step: int):
+        delta_w = step * aspect_ratio if capture_box.width > capture_box.height else step
+        delta_h = step / aspect_ratio if capture_box.width < capture_box.height else step
+        delta_w_edge = max(1-capture_box.width, min(delta_w, max_x - (capture_box.left + capture_box.width + border_size)))
+        delta_h_edge = max(1-capture_box.height, min(delta_h, max_y - (capture_box.top + capture_box.height + border_size)))
+        scale_for_edges = min(delta_h_edge / delta_h, delta_w_edge / delta_w)
+        delta_w_final = int(scale_for_edges * delta_w)
+        delta_h_final = int(scale_for_edges * delta_h)
+        logger.info(f"delta_w_total: {delta_w_final}, delta_h_total: {delta_h_final}")
+        logger.info(f"capture_box_before: {capture_box}")
+        capture_box.width += delta_w_final
+        capture_box.height += delta_h_final
+        logger.info(f"capture_box_after: {capture_box}")
+        wx.CallAfter(frame.SetSize, (capture_box.width+border_size*2, capture_box.height+border_size*2))
+        logger.info(f"new frame size: {(capture_box.width+border_size*2, capture_box.height+border_size*2)}")
 
     def perform_action(action_type, key):
         # Determine the action based on the key and whether it's a move or resize action
@@ -55,14 +58,10 @@ def setup_keybinds(
             elif key == "down":
                 adjust_position(0, delta)
         elif action_type == "resize":
-            if key == "left":
-                adjust_size(-delta, 0)
-            elif key == "right":
-                adjust_size(delta, 0)
-            elif key == "up":
-                adjust_size(0, -delta)
-            elif key == "down":
-                adjust_size(0, delta)
+            if key in ["left", "up"]:
+                adjust_size(-delta)
+            elif key in ["right", "down"]:
+                adjust_size(delta)
 
     def update_speed(action_type):
         # Accelerate the movement or resizing speed

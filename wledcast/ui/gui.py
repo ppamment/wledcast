@@ -1,26 +1,27 @@
 import wx
 
-from .model import Box
-
-
-def get_virtual_desktop_size() -> (int, int):
-    total_width = 0
-    total_height = 0
-    for i in range(wx.Display.GetCount()):
-        display = wx.Display(i)
-        rect = display.GetGeometry()
-        total_width += rect.GetWidth()
-        total_height = max(total_height, rect.GetHeight())
-    return total_width, total_height
+from ..config import border_size, max_x, max_y
+from ..model import Box
 
 
 class TransparentWindow(wx.Frame):
-    border_size = 5
+    
 
-    def __init__(self, parent, title, pos, size, capture_box: Box):
+    def __init__(self, parent, title, capture_box: Box):
+
         self.capture_box = capture_box
-        pos = (pos[0] - self.border_size, pos[1] - self.border_size)
-        size = (size[0] + 2 * self.border_size, size[1] + 2 * self.border_size)
+        self.capture_box.left = max(1, capture_box.left)
+        self.capture_box.top = max(1, capture_box.top)
+        adjusted_width = min(max_x - self.capture_box.left - border_size, capture_box.width)
+        adjusted_height = min(max_y - self.capture_box.top - border_size, capture_box.height)
+        adjustment_factor = min(adjusted_width / capture_box.width, adjusted_height / capture_box.height)
+        adjusted_width = int(capture_box.width * adjustment_factor)
+        adjusted_height = int(capture_box.height * adjustment_factor)
+        self.capture_box.width = adjusted_width
+        self.capture_box.height = adjusted_height
+        pos = (capture_box.left - border_size, capture_box.top - border_size)
+        size = (capture_box.width + 2 * border_size, capture_box.height + 2 * border_size)
+
         super().__init__(
             parent,
             title=title,
@@ -43,7 +44,6 @@ class TransparentWindow(wx.Frame):
         self.dragging = False
         self.resizing = False
         self.dragStartPos = None
-        self.max_x, self.max_y = get_virtual_desktop_size()
 
     def OnMouseDown(self, event):
         self.CaptureMouse()
@@ -65,11 +65,11 @@ class TransparentWindow(wx.Frame):
         if self.dragging:
             x, y = self.ClientToScreen(event.GetPosition())
             newpos = (
-                max(0, min(self.max_x - self.GetSize()[0], x - self.dragStartPos.x)),
-                max(0, min(self.max_y - self.GetSize()[1], y - self.dragStartPos.y)),
+                max(0, min(max_x - self.GetSize().width, x - self.dragStartPos.x)),
+                max(0, min(max_y - self.GetSize().height, y - self.dragStartPos.y)),
             )
-            self.capture_box.left = newpos[0] + self.border_size
-            self.capture_box.top = newpos[1] + self.border_size
+            self.capture_box.left = newpos[0] + border_size
+            self.capture_box.top = newpos[1] + border_size
             self.Move(newpos)
         elif self.resizing:
             x, y = self.ClientToScreen(event.GetPosition())
@@ -81,8 +81,8 @@ class TransparentWindow(wx.Frame):
                 ),
                 max(1, y - self.GetPosition().y),
             )
-            self.capture_box.width = newsize[0] - 2 * self.border_size
-            self.capture_box.height = newsize[1] - 2 * self.border_size
+            self.capture_box.width = newsize[0] - 2 * border_size
+            self.capture_box.height = newsize[1] - 2 * border_size
             self.SetSize(newsize)
 
     def OnMouseLeave(self, event):
@@ -100,7 +100,7 @@ class TransparentWindow(wx.Frame):
         )  # Fully transparent brush
         dc.Clear()
         dc.SetPen(
-            wx.Pen(wx.Colour(255, 0, 0, 1), self.border_size, wx.PENSTYLE_SOLID)
+            wx.Pen(wx.Colour(255, 0, 0, 1), border_size, wx.PENSTYLE_SOLID)
         )  # Red pen for the border
         dc.SetBrush(
             wx.Brush(wx.Colour(255, 0, 0, 1), wx.BRUSHSTYLE_TRANSPARENT)
@@ -114,7 +114,7 @@ class TransparentWindow(wx.Frame):
         dc = wx.PaintDC(self)
         width, height = self.GetClientSize()
         dc.SetBrush(wx.TRANSPARENT_BRUSH)  # Transparent brush for the interior
-        pen = wx.Pen(wx.Colour(255, 0, 0, 1), self.border_size)
+        pen = wx.Pen(wx.Colour(255, 0, 0, 1), border_size)
         dc.SetPen(pen)  # Red pen for the border
         dc.DrawRectangle(0, 0, width, height)
         pen.Destroy()
@@ -123,7 +123,3 @@ class TransparentWindow(wx.Frame):
         # Recreate the shape bitmap when the window is resized
         self.CreateShapeBitmap(event.GetSize())
         event.Skip()
-
-
-
-

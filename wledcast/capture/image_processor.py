@@ -1,28 +1,19 @@
-import json
-import os
 import cv2
 import numpy as np
 import wx
-from PIL import Image, ImageEnhance
 
-with open(os.path.join(os.path.dirname(__file__), "filter.json")) as f:
-    config = json.load(f)
+from wledcast.model import Size
+from wledcast import config
 
-def apply_filters_pillow(image: Image):
-    filters = config
-    brightness = ImageEnhance.Brightness(image)
-    image = brightness.enhance(filters["brightness"])
-    color = ImageEnhance.Color(image)
-    image = color.enhance(filters["saturation"])
-    contrast = ImageEnhance.Contrast(image)
-    image = contrast.enhance(filters["contrast"])
-    sharpness = ImageEnhance.Sharpness(image)
-    image = sharpness.enhance(filters["sharpen"])
-    return image
+filters = config.get_filter_config()
 
+
+def process_raw_image(img: np.ndarray, resolution: Size) -> np.ndarray:
+    img = cv2.resize(img, resolution, interpolation=cv2.INTER_AREA)
+    img = apply_filters_cv2(img)
+    return img
 
 def apply_filters_cv2(img: np.ndarray) -> np.ndarray:
-    filters = config
     # Convert to HSV for color adjustment
     if filters["saturation"] is not None:
         img = filter_saturation(img, filters["saturation"])

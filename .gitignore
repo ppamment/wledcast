@@ -1,3 +1,6 @@
 **pycache**
 .idea
-.aider*
+dist
+build
+**egg**
+*.spec

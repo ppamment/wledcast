@@ -1,5 +1,3 @@
-import json
-import os.path
 import threading
 import time
 from collections import deque
@@ -9,34 +7,34 @@ from asciimatics.scene import Scene
 from asciimatics.screen import Screen
 from asciimatics.widgets import Button, Frame, Label, Layout, Text
 
-from .model import Box
+from wledcast import config
+from wledcast.model import Box
 
 def config_editor(
     screen,
-    config,
+    filter_config: dict[str, float],
     frame_times: deque,
     capture_box: Box,
     stop_event: threading.Event,
 ):
     def update_form():
         # Update form values from config
-        for key, value in config.items():
+        for key, value in filter_config.items():
             form_data[key].value = str(value)
 
     def save_config():
         # Save form values to config
         try:
-            for key, value in config.items():
-                config[key] = float(form_data[key].value)
-            with open(os.path.join(os.path.dirname(__file__), "filter.json"), "w") as f:
-                f.write(json.dumps(config))
+            for key, value in filter_config.items():
+                filter_config[key] = float(form_data[key].value)
+            config.save_filter_config(filter_config)
         except ValueError as exc:
             pass  # Handle invalid float conversion
 
     frame = Frame(
         screen,
-        int(screen.height * 2 // 3),
-        int(screen.width * 2 // 3),
+        int(screen.height),
+        int(screen.width),
         title="Edit Configuration",
     )
     frame.set_theme("green")
@@ -58,15 +56,8 @@ def config_editor(
     layout.add_widget(fps_label)
 
     # Create form fields
-    form_data = {
-        "sharpen": Text("Sharpen:", "sharpen"),
-        "saturation": Text("Saturation:", "saturation"),
-        "brightness": Text("Brightness:", "brightness"),
-        "contrast": Text("Contrast:", "contrast"),
-        "balance_r": Text("Balance R:", "balance_r"),
-        "balance_g": Text("Balance G:", "balance_g"),
-        "balance_b": Text("Balance B:", "balance_b"),
-    }
+    form_data = {k: Text(k.replace("_", " ").title()+":", k) for k in filter_config.keys()}
+
     for name, field in form_data.items():
         layout.add_widget(field)
     layout.add_widget(Button("Save", save_config))
@@ -89,13 +80,16 @@ def config_editor(
 
 
 def start_terminal_ui(
-    config: dict,
+    filter_config: dict[str, float],
     frame_times: deque,
     capture_box: Box,
     stop_event: threading.Event,
 ):
     def run(screen: Screen):
-        config_editor(screen, config, frame_times, capture_box, stop_event)
+        config_editor(screen, filter_config, frame_times, capture_box, stop_event)
 
     Screen.wrapper(run)
     return 0
+
+def create_thread(filter_config: dict[str, float], frame_times: deque, capture_box: Box, stop_event: threading.Event):
+    return threading.Thread(target=start_terminal_ui, args=(filter_config, frame_times, capture_box, stop_event))
