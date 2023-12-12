@@ -1,8 +1,8 @@
 import logging
 
 import mss
-from PIL import Image
 import numpy as np
+from PIL import Image
 
 from wledcast.model import Box
 

@@ -1,1 +1,9 @@
-{"sharpen": 0.3, "saturation": 1.0, "brightness": 0.15, "contrast": 1.1, "balance_r": 1.0, "balance_g": 0.9, "balance_b": 0.45}
+{
+    "sharpen": 0.3,
+    "saturation": 1.0,
+    "brightness": 0.15,
+    "contrast": 1.1,
+    "balance_r": 1.0,
+    "balance_g": 0.82,
+    "balance_b": 0.45
+}

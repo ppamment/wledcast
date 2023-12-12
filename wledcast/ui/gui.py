@@ -1,27 +1,40 @@
+import logging
+
 import wx
 
-from ..config import border_size, max_x, max_y
-from ..model import Box
+from wledcast.config import border_size, max_x, max_y
+from wledcast.model import Box
+
+logger = logging.getLogger(__name__)
 
 
 class TransparentWindow(wx.Frame):
-    
-
     def __init__(self, parent, title, capture_box: Box):
-
         self.capture_box = capture_box
-        self.capture_box.left = max(1, capture_box.left)
-        self.capture_box.top = max(1, capture_box.top)
-        adjusted_width = min(max_x - self.capture_box.left - border_size, capture_box.width)
-        adjusted_height = min(max_y - self.capture_box.top - border_size, capture_box.height)
-        adjustment_factor = min(adjusted_width / capture_box.width, adjusted_height / capture_box.height)
+        self.capture_box.left = max(
+            border_size // 2, capture_box.left + border_size // 2
+        )
+        self.capture_box.top = max(border_size // 2, capture_box.top + border_size // 2)
+        adjusted_width = min(
+            max_x - self.capture_box.left - 2 * border_size, capture_box.width
+        )
+        adjusted_height = min(
+            max_y - self.capture_box.top - 2 * border_size, capture_box.height
+        )
+        adjustment_factor = min(
+            adjusted_width / capture_box.width, adjusted_height / capture_box.height
+        )
         adjusted_width = int(capture_box.width * adjustment_factor)
         adjusted_height = int(capture_box.height * adjustment_factor)
         self.capture_box.width = adjusted_width
         self.capture_box.height = adjusted_height
         pos = (capture_box.left - border_size, capture_box.top - border_size)
-        size = (capture_box.width + 2 * border_size, capture_box.height + 2 * border_size)
-
+        size = (
+            capture_box.width + 2 * border_size,
+            capture_box.height + 2 * border_size,
+        )
+        logger.info(f"Capture box (adjusted): {capture_box}")
+        logger.info(f"TransparentWindow: {Box(*pos, *size)}")
         super().__init__(
             parent,
             title=title,
@@ -46,20 +59,29 @@ class TransparentWindow(wx.Frame):
         self.dragStartPos = None
 
     def OnMouseDown(self, event):
-        self.CaptureMouse()
-        self.dragging = True
-        self.dragStartPos = event.GetPosition()
+        try:
+            self.CaptureMouse()
+            self.dragging = True
+            self.dragStartPos = event.GetPosition()
+        except Exception as e:
+            logger.info(f"Failed to capture mouse: {e}")
 
     def OnRightMouseDown(self, event):
-        self.CaptureMouse()
-        self.resizing = True
-        self.dragStartPos = event.GetPosition()
+        try:
+            self.CaptureMouse()
+            self.resizing = True
+            self.dragStartPos = event.GetPosition()
+        except Exception as e:
+            logger.info(f"Failed to capture mouse: {e}")
 
     def OnMouseUp(self, event):
-        if self.HasCapture():
-            self.ReleaseMouse()
-        self.dragging = False
-        self.resizing = False
+        try:
+            if self.HasCapture():
+                self.ReleaseMouse()
+            self.dragging = False
+            self.resizing = False
+        except Exception as e:
+            logger.info(f"Failed to release mouse: {e}")
 
     def OnMouseMove(self, event):
         if self.dragging:

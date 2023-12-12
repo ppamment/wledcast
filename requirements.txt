@@ -8,3 +8,5 @@ pywinctl>=0.3,<1.0
 requests>=2.31.0
 wxpython>=4.2,<5.0
 zeroconf>=0.127.0
+wxasync>=0.49
+aiofiles>=23.2

@@ -1,11 +1,12 @@
-from typing import Union
 import socket
 import time
+from typing import Union
 
 import requests
 from zeroconf import ServiceBrowser, ServiceInfo, ServiceStateChange, Zeroconf
 
 from wledcast.model import Size
+
 
 def discover(timeout: int = 3) -> list[str]:
     # Discover WLED instances on the local network
@@ -22,7 +23,12 @@ def discover(timeout: int = 3) -> list[str]:
     zeroconf = Zeroconf()
     services = []
 
-    def on_service_state_change(zeroconf, service_type, name, state_change):
+    def on_service_state_change(
+        zeroconf: Zeroconf,
+        service_type: str,
+        name: str,
+        state_change: ServiceStateChange,
+    ):
         if state_change == ServiceStateChange.Added:
             info = zeroconf.get_service_info(service_type, name)
             if info:
@@ -47,6 +53,7 @@ def select_instance(instances: list[str]) -> Union[str, None]:
     if not instances:
         print("No WLED instances available to select.")
         return None
+
     print("Please select a WLED instance to cast to:")
     for i, instance in enumerate(instances):
         print(f"{i+1}. {instance}")
