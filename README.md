@@ -5,7 +5,9 @@ Maybe I just wasn't lookig very hard, but I didn't find a simple tool already ex
 This was mostly created with the idea of casting to an LED matrix in mind, but there's no reason you couldn't use it to cast to a strip or an alien covered in strips. 
 You'd just need to use your imagination a bit more to work out what mapped where.
 
-There are loads of cool visualisations on youtube etc that look good even at relatively low resolution
+Looks great displaying a visualiser from whichever audio player you choose.
+
+There are loads of cool visualisations/VJ set etc on youtube etc that look great too.
 
 Issues and PRs are welcomed. This is still alpha at the moment. I have only really tested on windows but theoretically it should work on linux and MacOS too.
 
