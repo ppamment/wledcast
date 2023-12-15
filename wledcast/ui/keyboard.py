@@ -1,16 +1,21 @@
-import keyboard
 import logging
-import threading
-import wx
+import math
+from multiprocessing import Event
 
-from wledcast.model import Box
+import keyboard
+import wx
+from wxasync import WxAsyncApp
+
 from wledcast.config import border_size, max_x, max_y
+from wledcast.model import Box
 
 logger = logging.getLogger(__name__)
 
+
 def setup_keybinds(
-    frame: wx.Frame, capture_box: Box, stop_event: threading.Event
+    app: WxAsyncApp, frame: wx.Frame, capture_box: Box, stop_event: Event
 ) -> callable:
+    logger.info("Setting up keybinds")
     aspect_ratio = frame.GetSize().GetWidth() / frame.GetSize().GetHeight()
     # Movement and resizing speeds
     speed_increment = 3
@@ -21,28 +26,60 @@ def setup_keybinds(
     current_speed = {"move": min_speed, "resize": min_speed}
 
     def adjust_position(delta_x: int, delta_y: int):
-        delta_x = max(-capture_box.left, min(max_x - (capture_box.left +capture_box.width + 2 * border_size), delta_x))
-        delta_y = max(-capture_box.top, min(max_y - (capture_box.top + capture_box.height + 2 * border_size), delta_y))
+        delta_x = max(
+            border_size - capture_box.left,
+            min(
+                max_x - (capture_box.left + capture_box.width + border_size),
+                delta_x,
+            ),
+        )
+        delta_y = max(
+            border_size - capture_box.top,
+            min(
+                max_y - (capture_box.top + capture_box.height + border_size),
+                delta_y,
+            ),
+        )
         capture_box.left += delta_x
         capture_box.top += delta_y
         logger.info(f"Capture area: {capture_box}")
-        wx.CallAfter(frame.SetPosition, (capture_box.left, capture_box.top))
+        # wx.CallAfter(frame.capturing.SetPosition, (capture_box.left, capture_box.top))
+        wx.CallAfter(
+            frame.SetPosition,
+            (capture_box.left - border_size, capture_box.top - border_size),
+        )
 
     def adjust_size(step: int):
-        delta_w = step * aspect_ratio if capture_box.width > capture_box.height else step
-        delta_h = step / aspect_ratio if capture_box.width < capture_box.height else step
-        delta_w_edge = max(1-capture_box.width, min(delta_w, max_x - (capture_box.left + capture_box.width + border_size)))
-        delta_h_edge = max(1-capture_box.height, min(delta_h, max_y - (capture_box.top + capture_box.height + border_size)))
-        scale_for_edges = min(delta_h_edge / delta_h, delta_w_edge / delta_w)
-        delta_w_final = int(scale_for_edges * delta_w)
-        delta_h_final = int(scale_for_edges * delta_h)
+        delta_w = (
+            step * aspect_ratio if capture_box.width > capture_box.height else step
+        )
+        delta_h = (
+            step / aspect_ratio if capture_box.width < capture_box.height else step
+        )
+        delta_w_bounded = max(
+            1 - capture_box.width,
+            min(delta_w, max_x - (capture_box.left + capture_box.width + border_size)),
+        )
+        delta_h_bounded = max(
+            1 - capture_box.height,
+            min(delta_h, max_y - (capture_box.top + capture_box.height + border_size)),
+        )
+        h_w_bounded_scale = min(delta_h_bounded / delta_h, delta_w_bounded / delta_w)
+        delta_w_final = math.floor(h_w_bounded_scale * delta_w)
+        delta_h_final = math.floor(h_w_bounded_scale * delta_h)
         logger.info(f"delta_w_total: {delta_w_final}, delta_h_total: {delta_h_final}")
         logger.info(f"capture_box_before: {capture_box}")
         capture_box.width += delta_w_final
         capture_box.height += delta_h_final
         logger.info(f"capture_box_after: {capture_box}")
-        wx.CallAfter(frame.SetSize, (capture_box.width+border_size*2, capture_box.height+border_size*2))
-        logger.info(f"new frame size: {(capture_box.width+border_size*2, capture_box.height+border_size*2)}")
+        wx.CallAfter(
+            frame.SetSize,
+            (capture_box.width + border_size * 2, capture_box.height + border_size * 2),
+        )
+        # wx.CallAfter(frame.capturing.SetSize, (capture_box.width, capture_box.height))
+        logger.info(
+            f"new frame size: {(capture_box.width+border_size, capture_box.height+border_size)}"
+        )
 
     def perform_action(action_type, key):
         # Determine the action based on the key and whether it's a move or resize action
@@ -88,7 +125,8 @@ def setup_keybinds(
 
         elif key == "esc" and event.event_type == "down":
             stop_event.set()
-            wx.CallAfter(frame.Close)
+            wx.CallAfter(keyboard.unhook_all)
+            wx.CallAfter(app.ExitMainLoop)
 
     keyboard.hook(on_key_event)
 

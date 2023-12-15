@@ -3,17 +3,15 @@ import numpy as np
 import wx
 
 from wledcast.model import Size
-from wledcast import config
-
-filters = config.get_filter_config()
 
 
-def process_raw_image(img: np.ndarray, resolution: Size) -> np.ndarray:
+def process_raw_image(img: np.ndarray, resolution: Size, filters: dict) -> np.ndarray:
     img = cv2.resize(img, resolution, interpolation=cv2.INTER_AREA)
-    img = apply_filters_cv2(img)
+    img = apply_filters_cv2(img, filters)
     return img
 
-def apply_filters_cv2(img: np.ndarray) -> np.ndarray:
+
+def apply_filters_cv2(img: np.ndarray, filters: dict) -> np.ndarray:
     # Convert to HSV for color adjustment
     if filters["saturation"] is not None:
         img = filter_saturation(img, filters["saturation"])
@@ -112,12 +110,14 @@ def image_to_ascii(image):
         ascii_img += ascii_str[i : i + width] + "\n"
     return ascii_img
 
+
 def stretch_array_repeat(arr, stretch_factor):
     # Repeat the array elements along the column axis
     stretched_arr = np.repeat(arr, stretch_factor, axis=0)
     # Repeat the array elements along the row axis
     stretched_arr = np.repeat(stretched_arr, stretch_factor, axis=1)
     return stretched_arr
+
 
 def show_preview(rgb_array, resolution):
     # Show a live view of the downscaled feed on the computer with 24-bit color blocks

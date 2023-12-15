@@ -1,46 +1,59 @@
-import threading
-import time
+import asyncio
+import logging
 from collections import deque
+from multiprocessing import Event
 
+import wx
 from asciimatics.event import KeyboardEvent
 from asciimatics.scene import Scene
 from asciimatics.screen import Screen
 from asciimatics.widgets import Button, Frame, Label, Layout, Text
+from wxasync import StartCoroutine
 
 from wledcast import config
 from wledcast.model import Box
 
-def config_editor(
+logger = logging.getLogger(__name__)
+
+
+async def config_editor_async(
     screen,
-    filter_config: dict[str, float],
     frame_times: deque,
     capture_box: Box,
-    stop_event: threading.Event,
+    stop_event: Event,
 ):
+    logger.info("Starting config editor UI")
+
     def update_form():
         # Update form values from config
-        for key, value in filter_config.items():
+        for key, value in config.filters.items():
             form_data[key].value = str(value)
 
     def save_config():
-        # Save form values to config
-        try:
-            for key, value in filter_config.items():
-                filter_config[key] = float(form_data[key].value)
-            config.save_filter_config(filter_config)
-        except ValueError as exc:
-            pass  # Handle invalid float conversion
+        # Define an async function to save the config
+        async def async_save():
+            try:
+                for key, value in config.filters.items():
+                    config.filters[key] = float(form_data[key].value)
+                await config.save_filter_config()
+            except ValueError as exc:
+                pass
 
+        # This is a bit of a workaround as on_click cannot await async functions
+        asyncio.create_task(async_save())
+
+    logger.info(f"Creating frame, {screen.height}x{screen.width}")
     frame = Frame(
         screen,
-        int(screen.height),
-        int(screen.width),
+        min(int(screen.height), 15),
+        min(int(screen.width), 80),
         title="Edit Configuration",
     )
     frame.set_theme("green")
+    logger.info("Creating layout")
     layout = Layout([1], fill_frame=True)
     frame.add_layout(layout)
-
+    logger.info("Adding widgets")
     layout.add_widget(
         Label("Use Ctrl + arrow keys or left mouse button move the capture area")
     )
@@ -56,40 +69,39 @@ def config_editor(
     layout.add_widget(fps_label)
 
     # Create form fields
-    form_data = {k: Text(k.replace("_", " ").title()+":", k) for k in filter_config.keys()}
+    form_data = {
+        k: Text(k.replace("_", " ").title() + ":", k) for k in config.filters.keys()
+    }
 
     for name, field in form_data.items():
         layout.add_widget(field)
     layout.add_widget(Button("Save", save_config))
-
+    logger.info("Updating form")
     frame.fix()
     update_form()
 
+    logger.info("Setting scenes")
     # Create a scene with the frame
     scenes = [Scene([frame], -1)]
     screen.set_scenes(scenes)
-
+    screen.open()
+    # Start the event loop
     while not stop_event.is_set():
         if len(frame_times) >= 10:
-            fps_label.text = f"Casting {capture_box.width}x{capture_box.height} ({capture_box.left}, {capture_box.top}) to ({capture_box.left + capture_box.width}, {capture_box.top + capture_box.height}) at {round(len(frame_times) / (frame_times[len(frame_times) - 1] - frame_times[0]), 1) if len(frame_times) > 0 else '~~'}fps.)"
+            fps_label.text = f"Casting {capture_box.width}x{capture_box.height} ({capture_box.left}, {capture_box.top}) to ({capture_box.left + capture_box.width}, {capture_box.top + capture_box.height}) at {round((len(frame_times)-1) / (frame_times[len(frame_times) - 1] - frame_times[0]), 1) if len(frame_times) > 0 else '~~'}fps.)"
         screen.draw_next_frame(repeat=False)
         event = screen.get_event()
         if isinstance(event, KeyboardEvent):
             frame.process_event(event)
-        time.sleep(0.05)
+        await asyncio.sleep(0.05)
 
 
-def start_terminal_ui(
-    filter_config: dict[str, float],
-    frame_times: deque,
-    capture_box: Box,
-    stop_event: threading.Event,
+def start_async(
+    frame_times: deque, capture_box: Box, stop_event: Event, window: wx.Frame
 ):
-    def run(screen: Screen):
-        config_editor(screen, filter_config, frame_times, capture_box, stop_event)
+    logger.info("Starting terminal UI")
 
-    Screen.wrapper(run)
-    return 0
+    async def run(screen: Screen):
+        await config_editor_async(screen, frame_times, capture_box, stop_event)
 
-def create_thread(filter_config: dict[str, float], frame_times: deque, capture_box: Box, stop_event: threading.Event):
-    return threading.Thread(target=start_terminal_ui, args=(filter_config, frame_times, capture_box, stop_event))
+    return StartCoroutine(Screen.wrapper(run), window)

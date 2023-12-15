@@ -22,19 +22,20 @@ Issues and PRs are welcomed. This is still alpha at the moment. I have only real
 - Decent performance - I get around 60-65fps with all filters enabled with the fps limiter off. This is really a little too fast for WS2812bs if you have a quite a few on a pin, so the fps is limited to 25 by default
 
 ### Options (none required)
-| Option                    | Desctription                                                                                                      |
-|:--------------------------|:------------------------------------------------------------------------------------------------------------------|
-| --title TITLE             | Cast the window whost title contains TITLE                                                                        |
-| --fps FPS                 | Limit fps to FPS. 500 LEDS per GPIO is stable up to around 40Hz on and ESP32-WROOM for me but YMMV. Default 30    |
-| --host HOST               | Skip network discovery and cast to this IP address                                                                |
-| --live-preview            | Show the output in a preview pane on the computer                                                                 |
-| --search-timeout TIMEOUT  | Timeout for WLED network discovery, defaults to 3s. Increase if your latency is higher and devices are not found. |
-| --capture-method [METHOD] | Default mss works well on all platforms. dxcam is faster but only supports windows on primary monitor             |
-| --monitor [NUMBER]        | Cast a monitor rather than a window. Optionally pass the monitor number, else you'll be asked                     |
-| --debug                   | Endable debug logs                                                                                                |
+| Option                   | Desctription                                                                                                      |
+|:-------------------------|:------------------------------------------------------------------------------------------------------------------|
+| --host HOST              | Skip network discovery and cast to this IP address                                                                |
+| --title TITLE            | Cast the window whost title contains TITLE                                                                        |
+| --monitor [NUMBER]       | Cast a monitor rather than a window. Optionally pass the monitor number, else you'll be asked                     |
+| --output-resolution      | Skip resolution discovery from WLED and use this (format 64x32)                                                   |
+| --live-preview           | Show the output in a preview pane on the computer                                                                 |
+| --fps FPS                | Limit fps to FPS. 500 LEDS per GPIO is stable up to around 40Hz on and ESP32-WROOM for me but YMMV. Default 30    |
+| --search-timeout TIMEOUT | Timeout for WLED network discovery, defaults to 3s. Increase if your latency is higher and devices are not found. |
+| --workers [NUM]          | Number of workers capturing and sending data. Only increase if necessary to meet framerate.                       |
+| --debug                  | Endable debug logs                                                                                                |
 
 To implement:
---output-resolution     Skip resolution discovery from WLED and use this (format 64x32)
+     
 ### Installation
 ______
 Requires Python >=3.10. Create and activate a conda/venv, If you aren't sure how, I recommend [micromamba (install here)](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html)  as it's very lightweight and fast:
@@ -63,12 +64,21 @@ pip install -e .
 wledcast
 ```
 
-### Not working?
+### Additional requirements
 ______
-#### ImportError: DLL load failed
+
+#### Windows - ImportError: DLL load failed
 You probably need to install the Visual C++ 2015 runtime. You can find it here:
 
 https://www.microsoft.com/en-us/download/details.aspx?id=53840
+
+#### Linux - cannot build wxpython wheel
+Install the GTK+ development package. On Ubuntu 22.04 it is available from apt:
+```shell
+sudo apt install libgtkmm-3.0-dev
+```
+You can also find wheels for various linux distros here: https://extras.wxpython.org/wxPython4/extras/linux/gtk3/
+Copy the url and install it with pip, then retry installing wledcast.
 
 ### Licence
 ______
