@@ -77,6 +77,8 @@ Install the GTK+ development package. On Ubuntu 22.04 it is available from apt:
 ```shell
 sudo apt install libgtkmm-3.0-dev
 ```
+You can also find wheels for various linux distros here: https://extras.wxpython.org/wxPython4/extras/linux/gtk3/
+Copy the url and install it with pip, then retry installing wledcast.
 
 ### Licence
 ______

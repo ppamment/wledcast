@@ -1,6 +1,6 @@
 [project]
 name = 'wledcast'
-version = '0.2.1'
+version = '0.3.0'
 description = 'Cast a screen to WLED'
 authors = [{name = "Paul Pamment"}]
 license = {file = "LICENSE"}
