@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 async def async_main(selected_wled_host: str, led_matrix_shape: Size, capture_box: Box):
-    app = WxAsyncApp(sleep_duration=0.001)
+    app = WxAsyncApp()
 
     logger.info("Starting GUI")
     border = gui.TransparentWindow(None, "wledcast", capture_box)

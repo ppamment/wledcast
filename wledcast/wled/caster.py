@@ -18,6 +18,9 @@ logger = logging.getLogger(__name__)
 # Initialize the pixel writer
 frame_times = deque(maxlen=20)
 
+async def async_sleep(duration):
+    await asyncio.get_running_loop().run_in_executor(None, time.sleep, duration)
+
 
 def cast(
     writer: PixelWriter,
@@ -66,6 +69,6 @@ def start_async(
                     ),
                     callback=lambda x: frame_times.append(x) if x is not None else None,
                 )
-                await asyncio.sleep(1 / args.fps)
+                await async_sleep(1 / args.fps) # asyncio.sleep is only accurate to ~15ms!
 
     return StartCoroutine(loop(), window)

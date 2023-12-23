@@ -44,7 +44,6 @@ dxcam = ["dxcam>=0.0.5"]
 
 [metadata]
 author = "Paul Pamment"
-author_email = "p.pamment@gmail.com"
 long_description = "file: README.md"
 long_description_content_type = "text/markdown"
 url = "https://github.com/ppamment/wledcast"
