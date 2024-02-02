@@ -49,11 +49,6 @@ micromamba activate wledcast
 pip install wledcast
 wledcast
 ```
-Or if you are on windows and want to use the DirectX capture method:
-```shell
-pip install wledcast[dxcam]
-wledcast
-```
 
 #### From source (developers/contributors)
 Clone the repo, install the package (editable):
