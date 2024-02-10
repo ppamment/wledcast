@@ -105,29 +105,36 @@ def setup_keybinds(
         if current_speed[action_type] < max_speed:
             current_speed[action_type] += speed_increment
 
-    def on_key_event(event):
-        key = event.name
-        if key in ["left", "right", "up", "down"]:
-            ctrl = keyboard.is_pressed("ctrl")
-            alt = keyboard.is_pressed("alt")
+    def move_resize_handler(action_type, key):
+        perform_action(action_type, key)
+        update_speed(action_type)
 
-            if event.event_type == "down":
-                action_type = "move" if ctrl else "resize" if alt else None
-                if action_type:
-                    perform_action(action_type, key)
-                    update_speed(action_type)
-            elif event.event_type == "up":
-                # Stop the action and reset speed for both move and resize
-                for action_type in ["move", "resize"]:
-                    current_speed[action_type] = (
-                        min_speed if action_type == "move" else min_speed
-                    )
+    def on_key_release(event):
+        if event.event_type == 'up' and event.name in ['left', 'right', 'up', 'down']:
+            # Reset the speed for both move and resize actions
+            for action_type in ['move', 'resize']:
+                current_speed[action_type] = min_speed
 
-        elif key == "esc" and event.event_type == "down":
-            stop_event.set()
-            wx.CallAfter(keyboard.unhook_all)
-            wx.CallAfter(app.ExitMainLoop)
+    # Register the key release handler
+    keyboard.hook(on_key_release)
 
-    keyboard.hook(on_key_event)
+    # Bind hotkeys for moving and resizing
+    keyboard.add_hotkey('ctrl+left', lambda: move_resize_handler("move", "left"), suppress=True)
+    keyboard.add_hotkey('ctrl+right', lambda: move_resize_handler("move", "right"), suppress=True)
+    keyboard.add_hotkey('ctrl+up', lambda: move_resize_handler("move", "up"), suppress=True)
+    keyboard.add_hotkey('ctrl+down', lambda: move_resize_handler("move", "down"), suppress=True)
 
-    return on_key_event
+    keyboard.add_hotkey('alt+left', lambda: move_resize_handler("resize", "left"), suppress=True)
+    keyboard.add_hotkey('alt+right', lambda: move_resize_handler("resize", "right"), suppress=True)
+    keyboard.add_hotkey('alt+up', lambda: move_resize_handler("resize", "up"), suppress=True)
+    keyboard.add_hotkey('alt+down', lambda: move_resize_handler("resize", "down"), suppress=True)
+
+    # Function to handle escape key
+    def on_escape():
+        stop_event.set()
+        wx.CallAfter(keyboard.unhook_all)
+        wx.CallAfter(app.ExitMainLoop)
+
+    keyboard.add_hotkey('esc', on_escape, suppress=True)
+
+    return lambda: keyboard.unhook_all()  # Return a callable to unhook all hotkeys
