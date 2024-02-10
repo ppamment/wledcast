@@ -3,7 +3,7 @@ import logging
 import time
 from argparse import Namespace
 from collections import deque
-from multiprocessing import Event, Pool, Value
+from multiprocessing import Event, Pool
 
 from wx import Frame
 from wxasync import StartCoroutine
@@ -26,12 +26,11 @@ def cast(
     writer: PixelWriter,
     capture_box: Box,
     led_matrix_shape: Size,
-    capture_method: str,
     live_preview: bool,
     filters: dict,
 ):
     # Capture the selected screen
-    rgb_array = capture_screen.capture(capture_box, capture_method)
+    rgb_array = capture_screen.capture(capture_box)
     if rgb_array is None:
         logger.info("**Dropped frame**".ljust(40))
         return
@@ -49,13 +48,14 @@ def start_async(
     host: str,
     capture_box: Box,
     led_matrix_shape: Size,
-    args: Namespace,
+    conf_args: Namespace,
     stop_event: Event,
     window: Frame,
 ):
     writer = PixelWriter(host)
+
     async def loop():
-        with Pool(args.workers) as pool:
+        with Pool(conf_args.workers) as pool:
             while not stop_event.is_set():
                 pool.apply_async(
                     cast,
@@ -63,12 +63,11 @@ def start_async(
                         writer,
                         capture_box,
                         led_matrix_shape,
-                        "mss",
-                        args.live_preview,
+                        conf_args.live_preview,
                         config.filters,
                     ),
                     callback=lambda x: frame_times.append(x) if x is not None else None,
                 )
-                await async_sleep(1 / args.fps) # asyncio.sleep is only accurate to ~15ms!
+                await async_sleep(1 / conf_args.fps) # asyncio.sleep is only accurate to ~15ms!
 
     return StartCoroutine(loop(), window)

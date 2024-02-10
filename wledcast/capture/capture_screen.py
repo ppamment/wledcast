@@ -5,6 +5,7 @@ import numpy as np
 import pymonctl
 import pywinctl
 
+from wledcast.capture import capture_mss
 from wledcast.config import border_size, max_x, max_y
 from wledcast.model import Box
 
@@ -128,19 +129,10 @@ def get_capture_box(
 
 
 def capture(
-    window_box: Box, capture_method: Union[str, None] = None
+    window_box: Box
 ) -> Union[np.ndarray, None]:
     try:
-        if capture_method == "dxcam":
-            from .capture_dxcam import capture
-
-            rgb_array = capture(window_box)
-        elif capture_method == "mss":
-            from .capture_mss import capture
-
-            rgb_array = capture(window_box)
-        else:
-            raise ValueError(f"Invalid capture method: {capture_method}")
+        rgb_array = capture_mss.capture(window_box)
 
         return rgb_array
     except Exception as e:

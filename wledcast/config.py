@@ -26,13 +26,6 @@ parser.add_argument(
     help="Show a live preview of the WLED output  the computer screen",
     action="store_true",
 )
-# parser.add_argument(
-#     "--capture-method",
-#     type=str,
-#     default="mss",
-#     help="Default mss works well on all platforms. dxcam is faster but only supports windows on primary monitor",
-#     choices=["dxcam", "mss"],
-# )
 parser.add_argument(
     "--debug",
     default=False,

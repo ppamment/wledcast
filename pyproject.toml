@@ -25,7 +25,6 @@ dependencies = [
     "mss>=9.0",
     "numpy>=1.26,<2.0",
     "opencv-python>=4.8,<5.0",
-    "pillow>=10.0",
     "pywinctl>=0.3,<1.0",
     "requests>=2.31.0",
     "wxpython>=4.2,<5.0",
