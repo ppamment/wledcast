@@ -1,6 +1,6 @@
 [project]
 name = 'wledcast'
-version = '0.3.0'
+version = '0.4.0'
 description = 'Cast a screen to WLED'
 authors = [{name = "Paul Pamment"}]
 license = {file = "LICENSE"}
@@ -38,15 +38,11 @@ homepage = "https://github.com/ppamment/wledcast"
 repository = "https://github.com/ppamment/wledcast"
 Bug-Tracker = "https://github.com/ppamment/wledcast/issues"
 
-[project.optional-dependencies]
-dxcam = ["dxcam>=0.0.5"]
-
 [metadata]
 author = "Paul Pamment"
 long_description = "file: README.md"
 long_description_content_type = "text/markdown"
 url = "https://github.com/ppamment/wledcast"
-
 
 [tool.setuptools.package-data]
 wledcast = ["filter.json"]
