@@ -4,7 +4,6 @@ import wx
 
 from wledcast.model import Size
 
-
 def process_raw_image(img: np.ndarray, resolution: Size, filters: dict) -> np.ndarray:
     img = cv2.resize(img, resolution, interpolation=cv2.INTER_AREA)
     img = apply_filters_cv2(img, filters)
