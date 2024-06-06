@@ -3,19 +3,10 @@ import numpy as np
 import time
 import sys
 
-pw = PixelWriter('clock.local')
-# pw = PixelWriter('wled-matrix.local')
-rgb_array = np.tile((0,0,255), (105, 1, 3))
-pw.update_pixels(np.array(rgb_array))
+pw = PixelWriter('wled-matrix.local')
 
 from wledcast.mapper import LEDMapper, generator
-mapping = generator.ring(
-    length = 60,
-    diameter = 15,
-    angle = -90,
-    reverse = False,
-    crop = 0)
-mapping2 = generator.matrix(
+mapping = generator.matrix(
     width = 8,
     height = 8,
     firstled = 'topleft')
@@ -26,13 +17,11 @@ print('Size', led_mapper.get_size())
 scale = 8
 led_mapper.render_ascii(scalex=scale, scaley=scale/2)
 
-# rgb_array = np.full((105, 1, 3), (0,0,0))
-# pw.update_pixels(np.array(rgb_array))
 while True:
     for j in range(3):
         color = [255, 255, 255]
         color[j] = 0
-        for i in range(0, 18):
+        for i in range(0, 8+1):
             start = time.time()
             array_size = (i, i, 3)
             rgb_array = np.full(array_size, color, dtype=np.uint8)

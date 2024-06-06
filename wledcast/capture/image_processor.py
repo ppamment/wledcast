@@ -4,9 +4,33 @@ import wx
 
 from wledcast.model import Size
 
+from wledcast.mapper import LEDMapper, generator
+# mapping = generator.ring(
+#     length = 60,
+#     diameter = 16.6,
+#     angle = -90,
+#     reverse = False,
+#     crop = 0)
+mapping = generator.matrix(width=0, height=0)
+for (l, d) in ((60, 16.6), (48, 14.8), (40, 12.6), (32, 10.2), (24, 8.6), (16, 6.6), (12, 4.6), (8, 2.6), (1, 0)):
+    mapping += generator.ring(
+        length = l,
+        diameter = d,
+        angle = -90,
+        reverse = False,
+        crop = 0)
+for i, pixel in enumerate(mapping):
+    x, y = pixel
+    offset = 16.6/2
+    mapping[i] = (offset+x, offset+y)
+led_mapper = LEDMapper(mapping)
+
 def process_raw_image(img: np.ndarray, resolution: Size, filters: dict) -> np.ndarray:
+    resolution = Size(18,18)
     img = cv2.resize(img, resolution, interpolation=cv2.INTER_AREA)
     img = apply_filters_cv2(img, filters)
+    img = led_mapper.map_pixels(img)
+
     return img
 
 
