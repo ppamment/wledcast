@@ -12,11 +12,7 @@ mapping = generator.ring(
     angle = -90,
     reverse = False,
     crop = 0)
-# Translate mapping (apply offset on positions)
-for i, pixel in enumerate(mapping):
-    x, y = pixel
-    offset = 15/2
-    mapping[i] = (offset+x, offset+y)
+mapping = generator.translate(mapping, x=15/2, y=15/2)
 print('Mapping', mapping)
 led_mapper = LEDMapper(mapping)
 print('Bbox', led_mapper.get_bbox())
@@ -35,6 +31,6 @@ while True:
             rgb_array = led_mapper.map_pixels(rgb_array)
             led_mapper.render_ascii(scalex=scale, scaley=scale/2, rgb_array=rgb_array)
             pw.update_pixels(np.array(rgb_array))
-            time.sleep(max(0, 1/120))
+            time.sleep(max(0, 1/10))
             spent = time.time()-start
             print(f'fps = {1/spent} - {spent}s')

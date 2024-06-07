@@ -14,11 +14,7 @@ for (l, d) in ((60, 16.6), (48, 14.8), (40, 12.6), (32, 10.2), (24, 8.6), (16, 6
         angle = -90,
         reverse = False,
         crop = 0)
-# Translate mapping (apply offset on positions)
-for i, pixel in enumerate(mapping):
-    x, y = pixel
-    offset = 16.6/2
-    mapping[i] = (offset+x, offset+y)
+mapping = generator.translate(mapping, x=16.6/2, y=16.6/2)
 print('Mapping', mapping)
 led_mapper = LEDMapper(mapping)
 print('Length', len(led_mapper.mapping))
@@ -26,6 +22,7 @@ print('Bbox', led_mapper.get_bbox())
 print('Size', led_mapper.get_size())
 scale = 8
 led_mapper.render_ascii(scalex=scale, scaley=scale/2)
+# led_mapper.display_svg(scale=2)
 
 while True:
     for j in range(3):

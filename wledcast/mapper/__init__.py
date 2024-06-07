@@ -1,12 +1,15 @@
 import numpy as np
 from typing import List, Tuple, Optional
+from PIL import Image
+import cairosvg
+import io
 
 class LEDMapper:
     def __init__(self, mapping: List[Tuple[int, int]]):
         """
         Initialize the LEDMapper with a given mapping.
-        
-        :param mapping: A list of tuples representing the ordered positions of each pixel 
+
+        :param mapping: A list of tuples representing the ordered positions of each pixel
                         (x, y) in the LED display.
         """
         self.mapping = mapping
@@ -14,7 +17,7 @@ class LEDMapper:
     def map_pixels(self, img: np.ndarray) -> np.ndarray:
         """
         Map the pixels from the image to the LED display based on the mapping.
-        
+
         :param img: A numpy array representing the image.
         :return: A list of RGB tuples in the order defined by the mapping.
         """
@@ -28,38 +31,31 @@ class LEDMapper:
             else:
                 # Default to black if the coordinate is out of bounds
                 mapped_pixels.append((0, 0, 0))
-        
+
         return np.array(mapped_pixels)
 
     def get_bbox(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         """
         Calculate the bounding box of the mapping.
+        
 
-        :return: A tuple containing two tuples, representing the top-left and bottom-right corners of the bounding box.
+        :return: A tuple containing the minimum and maximum coordinates of the bounding box ((min_x, min_y), (max_x, max_y)).
         """
-        if not self.mapping:
-            return ((0, 0), (0, 0))
-
         xs, ys = zip(*self.mapping)
         min_x, max_x = min(xs), max(xs)
         min_y, max_y = min(ys), max(ys)
-
-        return ((min_x, min_y), (max_x, max_y))
+        return (min_x, min_y), (max_x, max_y)
 
     def get_size(self) -> Tuple[int, int]:
         """
         Calculate the size of the mapping.
 
-        :return: A tuple representing the width and height of the self.mapping.
+        :return: A tuple containing the size of the mapping (width, height).
         """
-        if not self.mapping:
-            return (0, 0)
-
         bbox = self.get_bbox()
         width = bbox[1][0] - bbox[0][0] + 1
         height = bbox[1][1] - bbox[0][1] + 1
-
-        return (width, height)
+        return width, height
 
     def render_ascii(self, scalex: float = 1, scaley: Optional[float] = None, rgb_array: Optional[np.ndarray] = None):
         """
@@ -109,11 +105,54 @@ class LEDMapper:
         ascii_art = '\n'.join(''.join(row) for row in canvas)
         print(ascii_art)
 
+    def render_svg(self, scale: float = 1) -> str:
+        """
+        Render the mapping as an SVG string with scaling for distances between circles.
 
-class Canvas:
-    def __init__(self, width:int, height:int):
-        pass
+        :param scale: Scale factor for spacing between the circles.
+        :return: An SVG string representing the LEDs.
+        """
+        # Determine the size of the SVG canvas
+        max_x = max(x for x, y in self.mapping)
+        max_y = max(y for x, y in self.mapping)
 
+        # Circle properties
+        circle_radius = 15  # Radius of the circle
+        font_size = 10  # Font size for the text
+        spacing = 2 * circle_radius * scale
+
+        # Create the SVG string
+        svg_parts = [
+            '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" '
+            f'width="{(max_x + 1) * spacing}" height="{(max_y + 1) * spacing}">'
+        ]
+
+        for i, (x, y) in enumerate(self.mapping):
+            cx = x * spacing + circle_radius
+            cy = y * spacing + circle_radius
+            svg_parts.append(
+                f'<circle cx="{cx}" cy="{cy}" r="{circle_radius}" fill="lightblue" stroke="black" stroke-width="1" />'
+            )
+            svg_parts.append(
+                f'<text x="{cx}" y="{cy}" font-size="{font_size}" text-anchor="middle" '
+                f'alignment-baseline="middle" fill="black">{i}</text>'
+            )
+
+        svg_parts.append('</svg>')
+        return "\n".join(svg_parts)
+
+    def display_svg(self, scale:float = 1):
+        """
+        Display the SVG output using PIL.Image.show().
+        """
+        svg_data = self.render_svg(scale=scale)
+        png_data = cairosvg.svg2png(bytestring=svg_data.encode('utf-8'))
+
+        # Load the PNG data into a PIL image
+        image = Image.open(io.BytesIO(png_data))
+
+        # Show the image
+        image.show()
 
 # Example usage
 if __name__ == "__main__":

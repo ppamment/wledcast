@@ -1,9 +1,16 @@
 from typing import List, Tuple
 import math
 
+# # TODO
+# def load(filename):
+#     """
+#     Return a mapping from the given yaml file name.
+#     """
+#     ...
+
 def matrix(width: int, height: int, firstled: str = 'topleft') -> List[Tuple[int, int]]:
     """
-    Generate a mapping for an LED matrix without serpentine pattern.
+    Generate a mapping for an 2D LED matrix.
 
     :param width: The width of the matrix.
     :param height: The height of the matrix.
@@ -67,6 +74,15 @@ def ring(length: int, diameter: int, angle: int = 0, reverse: bool = False, crop
 
     return positions
 
+def translate(mapping, x=0, y=0):
+    """
+    Return a translated mapping (apply offset x and y on positions).
+    """
+    translated_mapping = []
+    for i, pixel in enumerate(mapping):
+        pixel_x, pixel_y = pixel
+        translated_mapping.append((pixel_x+x, pixel_y+y))
+    return translated_mapping
 
 
 # Example usage
