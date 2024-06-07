@@ -18,8 +18,7 @@ led_mapper = LEDMapper(mapping)
 print('Length', len(led_mapper.mapping))
 print('Bbox', led_mapper.get_bbox())
 print('Size', led_mapper.get_size())
-scale = 8
-led_mapper.render_ascii(scalex=scale, scaley=scale/2)
+print(led_mapper.render_ascii())
 # led_mapper.display_svg(scale=1); import sys; sys.exit(0)
 
 while True:
@@ -32,7 +31,7 @@ while True:
             # print(i, array_size)
             rgb_array = np.full(array_size, color, dtype=np.uint8)
             rgb_array = led_mapper.map_pixels(rgb_array)
-            led_mapper.render_ascii(scalex=scale, scaley=scale/2, rgb_array=rgb_array)
+            print(led_mapper.render_ascii(rgb_array=rgb_array))
             pw.update_pixels(np.array(rgb_array))
             time.sleep(max(0, 1/20-(time.time()-start)))
             spent = time.time()-start

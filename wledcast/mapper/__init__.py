@@ -57,15 +57,15 @@ class LEDMapper:
         height = bbox[1][1] - bbox[0][1] + 1
         return width, height
 
-    def render_ascii(self, scalex: float = 1, scaley: Optional[float] = None, rgb_array: Optional[np.ndarray] = None):
+    def render_ascii(self, scale: float = 3, scalex: float = 2, scaley: float = 1, rgb_array: Optional[np.ndarray] = None):
         """
         Creates and prints an ASCII string representing the mapping LEDs on screen.
 
         :param scalex: A scaling factor for the x-axis.
         :param scaley: A scaling factor for the y-axis. If None, the aspect ratio is maintained.
         """
-        if scaley is None:
-            scaley = scalex
+        scalex = scalex * scale
+        scaley = scaley * scale
 
         # Find the bounding box of the mapping
         bbox = self.get_bbox()
@@ -103,7 +103,7 @@ class LEDMapper:
 
         # Convert the canvas to a string and print it
         ascii_art = '\n'.join(''.join(row) for row in canvas)
-        print(ascii_art)
+        return ascii_art
 
     def render_svg(self, scale: float = 1) -> str:
         """
