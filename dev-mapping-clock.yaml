@@ -1,0 +1,13 @@
+mapping:
+  - translate:
+      x: 7.5
+      y: 7.5
+      items:
+        - ring:
+            length: 60
+            diameter: 15
+            angle: -90
+        - ring:
+            length: 45
+            diameter: 10
+            angle: -90

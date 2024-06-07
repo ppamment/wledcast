@@ -2,22 +2,26 @@ import yaml
 from typing import List, Tuple
 import math
 
-# TODO
 def load(filename):
     """
     Return a mapping from the given yaml file name.
     """
+    # pixels_sequences = {}
     def create(item):
-        print('Item', item)
         fn = next(iter(item.keys()))
         args = item[fn]
-        print('\tArgs', args)
+        if not args:
+            raise IndentationError(f'No args for "{fn}", please check indentation: {item}')
         name = args.get('name', fn)
         if 'name' in args:
             del args['name']
         children = args.get('items', None)
         if 'items' in args:
             del args['items']
+        controller = args.get('controller', )
+        if 'controller' in args:
+            del args['controller']
+
         mapping = []
         if children:  # tranformer
             mapping_children = []
@@ -36,14 +40,31 @@ def load(filename):
 
     with open(filename, 'r') as file:
         yaml_data = yaml.safe_load(file)
-    
+
+    # TODO: To be tested.
+    # controllers = {}
+    # if 'controller' in yaml_data:
+    #     controller_data = yaml_data['controller']
+    #     for item in controller_data:
+    #         controller_type = next(iter(item.keys()))
+    #         args = item[controller_type]
+    #         try:
+    #             controller_id = args.get('id', args['host'])
+    #             if args['id']:
+    #                 del args['id']
+    #         except KeyError as e:
+    #             raise KeyError(f'controller must specify {e}')
+    #         if controller_id in controllers:
+    #             raise ValueError(f'duplicate id for controller {controller_id}')
+    #         controllers[controller_id] = {'sequence': 0}
+
+    mapping = []
     if 'mapping' in yaml_data:
         mapping_data = yaml_data['mapping']
-        mapping = []
         for item in mapping_data:
             mapping += create(item)
 
-        return mapping
+    return mapping
 
 def matrix(width: int, height: int, firstled: str = 'topleft') -> List[Tuple[int, int]]:
     """
@@ -128,7 +149,7 @@ if __name__ == "__main__":
     height = 3
     firstled = 'topleft'
     led_matrix = matrix(width, height, firstled)
-    print('Matrix', led_matrix)
+    # print('Matrix', led_matrix)
 
     length = 12
     diameter = 10
@@ -136,4 +157,4 @@ if __name__ == "__main__":
     firstled = 'topleft'
     reverse = True
     led_ring = ring(length, diameter, crop, firstled, reverse)
-    print('Ring', led_ring)
+    # print('Ring', led_ring)

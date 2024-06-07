@@ -1,78 +1,46 @@
-# controller:  # TODO
-#   - ddp:
-#       host: ring.local
-#       # name: ring.local  # name defaults to host
-#   # - e131:
-#   #     host: example.com
-#   #     ...
-#   # - esphome:
-#   #     host: example.com
+# TODO: Give GPT the Mapper class and this yaml,
+# and ask it to update the code to manage controllers,
+# using a structure like: {
+#   "controller_1": (shape_1, ..., shape_n),
+#   "controller_2": (shape_1, ..., shape_n),
+#   ...
+# }
+# and add the function to send pixels to the controllers
+# using a structure like: {
+#   "controller_1": (pixel_1, ..., pixel_n),
+#   "controller_2": (pixel_1, ..., pixel_n),
+#   ...
+# }
+controller:
+  - ddp:
+      host: wled-matrix.local
+      id: controller_1  # TODO: name defaults to host
+  - ddp:
+      host: ring.local
+      id: controller_2
+  # - e131:
+  #     host: example.com
+  #     ...
+  # - esphome:
+  #     host: example.com
+  # - beamer:
+  #     ...
 
 mapping:
-  # - ring:
-  #     # controller: ring.local  # TODO
-  #     # order: 0  # defaults to items index
-  #     length: 60
-  #     diameter: 16.6
-  #     angle: -90
   - translate:
-      name: multiring
-      x: 8.3
-      y: 8.3
-      items:  # FIXME: For loop for multiring ?
-        - ring:
-            length: 60
-            diameter: 16.6
-            angle: -90
-        - ring:
-            length: 48
-            diameter: 14.8
-            angle: -90
-        - ring:
-            length: 40
-            diameter: 12.6
-            angle: -90
-        - ring:
-            length: 32
-            diameter: 10.2
-            angle: -90
-        - ring:
-            length: 24
-            diameter: 8.6
-            angle: -90
-        - ring:
-            length: 16
-            diameter: 6.6
-            angle: -90
-        - ring:
-            length: 12
-            diameter: 4.6
-            angle: -90
-        - ring:
-            length: 8
-            diameter: 2.6
-            angle: -90
-        - ring:
-            length: 1
-            diameter: 0
-            angle: -90
-
-  # - translate:
-  #     name: matrix8x8
-  #     x: 26  # 60/2 - 8/2
-  #     y: 60
-  #     items:
-  #       - matrix:
-  #           width: 8
-  #           height: 8
-
-  # - translate:
-  #     name: clock
-  #     x: 60/2 - 60/2
-  #     y: 8 + 60
-  #     items:
-  #       - ring:
-  #           length: 60
-  #           diameter: 15
-  #           angle: -90
-
+      controller:
+        id: controller_1
+        # first: 1  # TODO: first number for pixels sequence
+      items:
+        - matrix:
+            width: 8
+            height: 8
+            firstled: topleft
+        - include:
+            file: 'dev-mapping-multiring.yaml'
+            controller:
+              id: controller_2
+        - include:
+            file: 'dev-mapping-clock.yaml'
+            controller:
+              id: controller_3
