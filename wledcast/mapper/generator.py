@@ -1,12 +1,49 @@
+import yaml
 from typing import List, Tuple
 import math
 
-# # TODO
-# def load(filename):
-#     """
-#     Return a mapping from the given yaml file name.
-#     """
-#     ...
+# TODO
+def load(filename):
+    """
+    Return a mapping from the given yaml file name.
+    """
+    def create(item):
+        print('Item', item)
+        fn = next(iter(item.keys()))
+        args = item[fn]
+        print('\tArgs', args)
+        name = args.get('name', fn)
+        if 'name' in args:
+            del args['name']
+        children = args.get('items', None)
+        if 'items' in args:
+            del args['items']
+        mapping = []
+        if children:  # tranformer
+            mapping_children = []
+            for child in children:
+                mapping_children += create(child)
+            mapping += create_transformer(fn, args, mapping_children)
+        else:  # shape
+            mapping += create_shape(fn, args)
+        return mapping
+
+    def create_transformer(fn, args, mapping):
+        return globals()[fn](mapping=mapping, **args)
+
+    def create_shape(fn, args):
+        return globals()[fn](**args)
+
+    with open(filename, 'r') as file:
+        yaml_data = yaml.safe_load(file)
+    
+    if 'mapping' in yaml_data:
+        mapping_data = yaml_data['mapping']
+        mapping = []
+        for item in mapping_data:
+            mapping += create(item)
+
+        return mapping
 
 def matrix(width: int, height: int, firstled: str = 'topleft') -> List[Tuple[int, int]]:
     """
