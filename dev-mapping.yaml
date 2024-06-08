@@ -30,17 +30,23 @@ mapping:
   - translate:
       controller:
         id: controller_1
-        # first: 1  # TODO: first number for pixels sequence
+        # first: 1  # TODO: first number for pixels sequence ?
       items:
-        - matrix:
-            width: 8
-            height: 8
-            firstled: topleft
+        # - matrix:
+        #     width: 8
+        #     height: 8
+        #     firstled: topleft
+        #     controller:
+        #       id: controller_1
         - include:
             file: 'dev-mapping-multiring.yaml'
             controller:
               id: controller_2
-        - include:
-            file: 'dev-mapping-clock.yaml'
-            controller:
-              id: controller_3
+        - translate:
+            x: 17.6
+            y: 0.8
+            items:
+              - include:
+                  file: 'dev-mapping-clock.yaml'
+                  controller:
+                    id: controller_3

@@ -35,7 +35,6 @@ class Mapping:
     def bbox(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         """
         Calculate the bounding box of the mapping.
-        
 
         :return: A tuple containing the minimum and maximum coordinates of the bounding box ((min_x, min_y), (max_x, max_y)).
         """

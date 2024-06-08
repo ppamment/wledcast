@@ -115,9 +115,6 @@ def ring(length: int, diameter: int, angle: int = 0, reverse: bool = False, crop
 
     # Generate the positions of the LEDs
     positions = [
-        # # FIXME: `radius +` offsets the bbox to ((0,0), (x,y)), but the center is no more (0,0)
-        # (radius + radius * math.cos(math.radians(angle + i * angle_increment)),
-        #  radius + radius * math.sin(math.radians(angle + i * angle_increment)))
         (radius * math.cos(math.radians(angle + i * angle_increment)),
          radius * math.sin(math.radians(angle + i * angle_increment)))
         for i in range(length)
@@ -142,6 +139,8 @@ def translate(mapping, x=0, y=0):
         translated_mapping.append((pixel_x+x, pixel_y+y))
     return translated_mapping
 
+def include(file):
+    return load(file)
 
 # Example usage
 if __name__ == "__main__":
