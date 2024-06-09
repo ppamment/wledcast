@@ -16,6 +16,18 @@ def run(generator, mapping, fps=30, display=True):
         print(f'fps = {1/spent} ({fps}), {spent}s')
         # yield frame
 
+def screen(to_size):
+    from wledcast.capture import capture_screen
+    from wledcast.model import Box, Size
+    import cv2
+    while True:
+        led_matrix_shape = Size(*(round(x) for x in to_size))
+        window = capture_screen.select_window(monitor=0)  # FIXME: monitor=config.args.monitor, title=config.args.title
+        capture_box = capture_screen.get_capture_box(window, led_matrix_shape)
+        rgb_array = capture_screen.capture(capture_box)
+        rgb_array = cv2.resize(rgb_array, led_matrix_shape, interpolation=cv2.INTER_AREA)
+        yield rgb_array
+
 def growing_square(side_size):
     """
     Generate hues of a growing square.
