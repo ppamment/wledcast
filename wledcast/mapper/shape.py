@@ -2,12 +2,24 @@ import yaml
 from typing import List, Tuple
 import math
 
-def map_controller(controller_id, positions):
+def map_controller(controller_id, positions, force=False):
+    """
+    Map positions to controller_id.
+    """
     # print('Mapping to', controller_id, len(list(filter(bool, (len(p) < 3 for p in positions)))))
     for i in range(len(positions)):
         if len(positions[i]) < 3:
             positions[i] = positions[i] + (controller_id,)
     return positions  # positions is now a mapping
+    # mapping = ()
+    # for position in positions:
+    #     if force:
+    #         position = position[:2]
+    #     # Add controller_id if not already existing
+    #     if len(position) < 3:
+    #         mapping += ((position[0], position[1], controller_id),)
+    # print(mapping)
+    # return mapping  # a mapping is positions with controller_id
 
 def load(filename):
     """
@@ -60,6 +72,8 @@ def load(filename):
 
     return mapping
 
+
+# Shapes: an array of (x, y) positions.
 
 def matrix(width: int, height: int, firstled: str = 'topleft') -> List[Tuple[int, int]]:
     """
@@ -124,7 +138,31 @@ def ring(length: int, diameter: int, angle: int = 0, reverse: bool = False, crop
 
     return positions
 
-def translate(mapping, x=0, y=0):
+
+# Transformers: always take `mapping` as first argument
+
+def scale(mapping, factor=1):
+    """
+    Return a scaled mapping by the given factor.
+    
+    :param mapping: List of tuples representing the (x, y) positions of each LED.
+    :param factor: Scale factor for the mapping. Default is 1 (no scaling).
+    :return: Scaled mapping.
+    """
+    scaled_mapping = []
+    for i, pixel in enumerate(mapping):
+        try:
+            # Pixel already mapped with controller_id
+            pixel_x, pixel_y, controller_id = pixel
+            scaled_mapping.append((pixel_x * factor, pixel_y * factor, controller_id))
+        except ValueError:
+            # Pixel not yet mapped
+            pixel_x, pixel_y = pixel
+            scaled_mapping.append((pixel_x * factor, pixel_y * factor))
+
+    return scaled_mapping
+
+def translate(mapping, x=0, y=0):  # TODO: Also rotate_centroid() and rotate_reframe() ?
     """
     Return a translated mapping (apply offset x and y on positions).
     """
@@ -141,21 +179,91 @@ def translate(mapping, x=0, y=0):
 
     return translated_mapping
 
+def rotate(mapping, angle):
+    """
+    Return a rotated mapping by a given angle in degrees.
+
+    :param mapping: A list of tuples representing the (x, y) position of each LED.
+    :param angle: The angle to rotate the mapping, in degrees.
+    :return: A rotated mapping.
+    """
+    angle_rad = math.radians(angle)
+    cos_angle = math.cos(angle_rad)
+    sin_angle = math.sin(angle_rad)
+
+    rotated_mapping = []
+    for i, pixel in enumerate(mapping):
+        try: # Handle pixels with and without controller_id
+            # Pixel already mapped
+            pixel_x, pixel_y, controller_id = pixel
+            new_x = pixel_x * cos_angle - pixel_y * sin_angle
+            new_y = pixel_x * sin_angle + pixel_y * cos_angle
+            rotated_mapping.append((new_x, new_y, controller_id))
+        except ValueError:
+            # Pixel not yet mapped
+            pixel_x, pixel_y = pixel
+            new_x = pixel_x * cos_angle - pixel_y * sin_angle
+            new_y = pixel_x * sin_angle + pixel_y * cos_angle
+            rotated_mapping.append((new_x, new_y))
+
+    return rotated_mapping
+
+# def rotate_adjusted(mapping, angle):
+#     from wledcast.mapper import Mapping
+#     mapping = rotate(mapping, angle)
+#     bbox = Mapping(map_controller('none', mapping, force=True)).bbox  # FIXME: hackish
+#     offset_x, offset_y = -min(bbox[0]), -min(bbox[1])
+#     print(bbox, offset_x, offset_y)
+#     return translate(mapping, x=offset_x, y=offset_y)
+
+# def rotate_centroid(mapping, angle):
+#     """
+#     Return a mapping rotated around its centroid by a given angle in degrees.
+
+#     :param mapping: A list of tuples representing the (x, y) position of each LED.
+#     :param angle: The angle to rotate the mapping, in degrees.
+#     :return: A rotated mapping.
+#     """
+#     # Calculate the centroid
+#     n = len(mapping)
+#     centroid_x = sum(x for x, y, *rest in mapping) / n
+#     centroid_y = sum(y for x, y, *rest in mapping) / n
+
+#     # Convert angle to radians
+#     angle_rad = math.radians(angle)
+#     cos_angle = math.cos(angle_rad)
+#     sin_angle = math.sin(angle_rad)
+
+#     rotated_mapping = []
+#     for pixel in mapping:
+#         try:  # Handle pixels with and without controller_id
+#             # Pixel already mapped
+#             pixel_x, pixel_y, controller_id = pixel
+#             # Translate pixel to origin
+#             trans_x = pixel_x - centroid_x
+#             trans_y = pixel_y - centroid_y
+#             # Rotate pixel
+#             new_x = trans_x * cos_angle - trans_y * sin_angle
+#             new_y = trans_x * sin_angle + trans_y * cos_angle
+#             # Translate pixel back
+#             new_x += centroid_x
+#             new_y += centroid_y
+#             rotated_mapping.append((new_x, new_y, controller_id))
+#         except ValueError:
+#             # Pixel not yet mapped
+#             pixel_x, pixel_y = pixel
+#             # Translate pixel to origin
+#             trans_x = pixel_x - centroid_x
+#             trans_y = pixel_y - centroid_y
+#             # Rotate pixel
+#             new_x = trans_x * cos_angle - trans_y * sin_angle
+#             new_y = trans_x * sin_angle + trans_y * cos_angle
+#             # Translate pixel back
+#             new_x += centroid_x
+#             new_y += centroid_y
+#             rotated_mapping.append((new_x, new_y))
+
+#     return rotated_mapping
+
 def include(file):
     return load(file)
-
-# Example usage
-if __name__ == "__main__":
-    width = 5
-    height = 3
-    firstled = 'topleft'
-    led_matrix = matrix(width, height, firstled)
-    # print('Matrix', led_matrix)
-
-    length = 12
-    diameter = 10
-    crop = 3
-    firstled = 'topleft'
-    reverse = True
-    led_ring = ring(length, diameter, crop, firstled, reverse)
-    # print('Ring', led_ring)

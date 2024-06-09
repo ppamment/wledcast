@@ -17,24 +17,34 @@ controller:
   #     ...
 
 mapping:
-  # - matrix:
-  #     width: 8
-  #     height: 8
-  #     firstled: topleft
+  - translate:
+      x: 2.5
+      y: 0
+      items:
+      - rotate:
+          angle: 45
+          items:
+            - scale:
+                factor: 0.5
+                items:
+                  - matrix:
+                      width: 8
+                      height: 8
+                      firstled: topleft
+                      controller:
+                        id: controller_1
+  # - include:
+  #     file: 'dev-mapping-matrix-8x8.yaml'
   #     controller:
   #       id: controller_1
-  - include:
-      file: 'dev-mapping-matrix-8x8.yaml'
-      controller:
-        id: controller_1
-  # - translate:
-  #     x: 17.6
-  #     y: 0.8
-  #     items:
-  #     - include:
-  #         file: 'dev-mapping-multiring.yaml'
-  #         controller:
-  #           id: controller_2
+  - translate:
+      # x: 17.6
+      # y: 0.8
+      items:
+      - include:
+          file: 'dev-mapping-multiring.yaml'
+          controller:
+            id: controller_2
   - translate:
       x: 17.6
       y: 0.8

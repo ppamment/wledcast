@@ -166,7 +166,6 @@ class Mapping:
         ]
 
         for j, controller in enumerate(self.controllers.values()):
-            print(controller)
             for i, (x, y) in enumerate(controller.positions):
                 prefix = controller_labels[j]
                 cx = x * spacing + circle_radius

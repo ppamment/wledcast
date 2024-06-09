@@ -16,14 +16,14 @@ def run(generator, mapping, fps=30, display=True):
         print(f'fps = {1/spent} ({fps}), {spent}s')
         # yield frame
 
-def filter(generator,
-        sharpen=0.1,
+def filter(generator,  # FIXME: filter() should be appliable per controller, or better: per shape
+        sharpen=0.1,   #        because each controller/shape can have different physical LEDs with their own bias
         saturation=1.0,
-        brightness=0.3,
-        contrast=1.0,
-        balance_r=1.0,
-        balance_g=0.7,
-        balance_b=0.45
+        brightness=0.5,
+        contrast=2.0,
+        balance_r=0.75,
+        balance_g=0.8,
+        balance_b=0.85
     ):
     """
     Filter generator frames according arguments.
