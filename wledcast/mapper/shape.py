@@ -2,7 +2,7 @@ import yaml
 from typing import List, Tuple
 import math
 
-def map_shape(controller_id, positions):
+def map_controller(controller_id, positions):
     # print('Mapping to', controller_id, len(list(filter(bool, (len(p) < 3 for p in positions)))))
     for i in range(len(positions)):
         if len(positions[i]) < 3:
@@ -37,7 +37,7 @@ def load(filename):
         else:  # shape
             positions += create_shape(fn, args)
         if controller:
-            mapping = map_shape(controller['id'], positions)
+            mapping = map_controller(controller['id'], positions)
         else:
             mapping = positions
 

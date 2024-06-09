@@ -17,30 +17,29 @@ controller:
   #     ...
 
 mapping:
+  # - matrix:
+  #     width: 8
+  #     height: 8
+  #     firstled: topleft
+  #     controller:
+  #       id: controller_1
+  - include:
+      file: 'dev-mapping-matrix-8x8.yaml'
+      controller:
+        id: controller_1
+  # - translate:
+  #     x: 17.6
+  #     y: 0.8
+  #     items:
+  #     - include:
+  #         file: 'dev-mapping-multiring.yaml'
+  #         controller:
+  #           id: controller_2
   - translate:
-      # controller:
-      #   id: controller_2
-        # first: 1  # TODO: first number for pixels sequence ?
+      x: 17.6
+      y: 0.8
       items:
-        - translate:
-            x: 0 #33
-            y: 0 #4.3
-            items:
-              - matrix:
-                  width: 8
-                  height: 8
-                  firstled: topleft
-                  controller:
-                    id: controller_1
-        # - include:
-        #     file: 'dev-mapping-multiring.yaml'
-        #     controller:
-        #       id: controller_2
-        - translate:
-            x: 17.6
-            y: 0.8
-            items:
-              - include:
-                  file: 'dev-mapping-clock.yaml'
-                  controller:
-                    id: controller_3
+        - include:
+            file: 'dev-mapping-clock.yaml'
+            controller:
+              id: controller_3

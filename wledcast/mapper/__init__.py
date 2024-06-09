@@ -11,7 +11,7 @@ mapping.write(np.array(img))
 ```
 """
 
-from . import generator, controller
+from . import shape, controller
 import numpy as np
 from PIL import Image
 import cairosvg
@@ -201,8 +201,8 @@ class Mapping:
         """
         Return an object Mapping containing the mapping specified in filename (YAML).
         """
-        mapping = generator.load(filename)
-        mapping = generator.map_shape('none', mapping)  # default unmapped positions to controller id 'none'
+        mapping = shape.load(filename)
+        mapping = shape.map_controller('none', mapping)  # default unmapped positions to controller id 'none'
         for id, loaded_controller in controller.load(filename).items():
             controllers[id] = loaded_controller
         return Mapping(mapping, controllers)

@@ -6,10 +6,7 @@ mapping.display()
 # mapping.display('svg')
 # import sys; sys.exit()
 
-# PixelWriter
-from wledcast.wled.pixel_writer import PixelWriter
-pw = PixelWriter('clock.local')
-
 # Growing square mapped to mapping
 from wledcast.mapper import test
-test.growing_square(mapping, pw)
+test.growing_square(mapping)
+# test.image_zoom(mapping, '/Users/damien/Downloads/rubik-rotating.gif')

@@ -2,7 +2,7 @@ import numpy as np
 from PIL import Image
 import time
 
-def growing_square(mapping, pixel_writer, fps=60):
+def growing_square(mapping, fps=60):
     square_size = 1+round(max(mapping.size))
     while True:
         for j in range(3):
@@ -19,7 +19,7 @@ def growing_square(mapping, pixel_writer, fps=60):
                 spent = time.time()-start
                 print(f'fps = {1/spent} - {spent}s')
 
-def image_zoom(mapping, pixel_writer, image_filename):
+def image_zoom(mapping, image_filename):
     img = Image.open(image_filename)
     width, height = img.size
     crops = list(range(1, int(min(width, height)/2), 1)) + [min(width, height)/2]

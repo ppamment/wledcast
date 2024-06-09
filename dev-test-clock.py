@@ -1,13 +1,16 @@
 # Programmatic mapping declaration:
-from wledcast.mapper import generator, Mapping
-mapping = generator.ring(
+from wledcast.mapper import shape, controller, Mapping
+mapping = shape.ring(
     length = 60,
     diameter = 15,
     angle = -90,
     reverse = False,
     crop = 0)
-mapping = generator.translate(mapping, x=15/2, y=15/2)
-mapping = Mapping(mapping)
+mapping = shape.translate(mapping, x=15/2, y=15/2)
+mapping = shape.map_controller('none', mapping)
+mapping = Mapping(
+    mapping,
+    controllers={'none': controller.Controller(controller.ddp('clock.local'))})
 
 # YAML mapping declaration
 from wledcast.mapper import Mapping
@@ -16,10 +19,6 @@ print(mapping)
 mapping.display()
 # mapping.display('svg')
 
-# PixelWriter
-from wledcast.wled.pixel_writer import PixelWriter
-pw = PixelWriter('clock.local')
-
 # Growing square mapped to mapping
 from wledcast.mapper import test
-test.growing_square(mapping, pw)
+test.growing_square(mapping)
