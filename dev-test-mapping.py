@@ -6,13 +6,15 @@ mapping.display()
 # mapping.display('svg')
 # import sys; sys.exit()
 
-# Growing square mapped to mapping
+# Some source mapped to mapping
 source.run(
-    fps=60,
+    fps=25,
     mapping=mapping,
     # generator=source.growing_square(side_size=max(mapping.size)))
     # generator=source.image_zoom('/Users/damien/Downloads/rubik-rotating.gif', size=mapping.size))
-    generator=source.filter(source.screen(to_size=mapping.size)))
+    generator=source.filter(
+        brightness=0.1,
+        generator=source.screen(to_size=mapping.size)))
 
 # Growing square mapped to mapping (deprecated)
 # from wledcast.mapper import test

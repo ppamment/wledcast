@@ -32,6 +32,7 @@ class Mapping:
         for position in mapping:
             x, y, controller_id = position
             self.controllers[controller_id].positions.append((x,y))
+            # FIXME: Ensure it is a np.ndarray() for performance ?
     
     def __str__(self):
         return f'Mapping: {sum(len(c.positions) for id, c in self.controllers.items())} pixels, size={self.size}, bbox={self.bbox}'

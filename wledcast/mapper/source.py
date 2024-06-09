@@ -2,9 +2,11 @@ import numpy as np
 from PIL import Image
 import time
 
+# TODO: Implement Glediator protocol in source glediator(): https://www.youtube.com/watch?v=lQv3cHG1-XQ&t=517s
+
 def run(generator, mapping, fps=30, display=True):
     """
-    Run the generator and map frames on mapping at fps.
+    Run the given source `generator` and map frames on `mapping` at `fps`.
     """
     for frame in generator:
         start = time.time()
@@ -41,7 +43,7 @@ def filter(generator,  # FIXME: filter() should be appliable per controller, or 
     for frame in generator:
         yield image_processor.apply_filters_cv2(frame, filters)
 
-def screen(to_size, monitor=0):
+def screen(to_size, monitor=0):  # FIXME: Add function screen_discover to list available screens and windows ?
     """
     Generate frames from monitor (screencast).
     """
@@ -92,6 +94,6 @@ def image_zoom(image_filename, size):
                 forward = not forward
             # img.crop(border).show()
 
-# def resize(generator, rgb_array, size):  # TODO: Implement and move this to shape.resize()
-#     size = tuple(int(x) for x in size)
-#     yield np.array(img.crop(border).resize(size))
+# def resize(generator, size, interpolation):
+#     # TODO: for interpolation, factorize cv2.resize() in source.screen
+#     ...

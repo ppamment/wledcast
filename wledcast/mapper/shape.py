@@ -21,7 +21,7 @@ def map_controller(controller_id, positions, force=False):
     # print(mapping)
     # return mapping  # a mapping is positions with controller_id
 
-def load(filename):
+def load(filename):  # TODO: Move to module mapper
     """
     Return a mapping from the given yaml file name.
     """
@@ -30,15 +30,21 @@ def load(filename):
         args = item[fn]
         if not args:
             raise IndentationError(f'No args for "{fn}", please check indentation: {item}')
-        controller = args.get('controller', {}) #, {'id': 'none'})
+        # id = args.get('id', fn)  # TODO
+        # if 'id' in args:
+        #     del args['id']
+        controller = args.get('controller', {})
         if 'controller' in args:
             del args['controller']
-        name = args.get('name', fn)
-        if 'name' in args:
-            del args['name']
+        disabled = args.get('disabled', False)
+        if 'disabled' in args:
+            del args['disabled']
         children = args.get('items', None)
         if 'items' in args:
             del args['items']
+
+        if disabled:
+            return []
 
         positions = []
         if children:  # tranformer

@@ -16,16 +16,17 @@ controller:
   # - beamer:
   #     ...
 
+
 mapping:
   - translate:
-      x: 2.5
+      x: 0
       y: 0
       items:
       - rotate:
-          angle: 45
+          angle: 0
           items:
             - scale:
-                factor: 0.5
+                factor: 2.5
                 items:
                   - matrix:
                       width: 8
@@ -38,18 +39,47 @@ mapping:
   #     controller:
   #       id: controller_1
   - translate:
-      # x: 17.6
-      # y: 0.8
+      # disabled: true
+      x: 6
       items:
       - include:
           file: 'dev-mapping-multiring.yaml'
           controller:
             id: controller_2
   - translate:
-      x: 17.6
+      x: 25
       y: 0.8
       items:
         - include:
             file: 'dev-mapping-clock.yaml'
             controller:
               id: controller_3
+
+
+# # TODO: Scenes definition and startup run instruction
+
+# scenes:
+#   - id: none
+#     generator:
+#       mapping: none  # default (same system like default id 'none' in Mapping.controllers)
+#       generator:
+#         filter:
+#           brightness: 0.5
+#           generator:
+#             screen:
+#               monitor: 0
+#   - id: playlist
+#     generator:
+#       playlist:
+#         generators:
+#           - play:
+#               loop: 3
+#               duration: 10
+#               scene: none  # either scene or generator
+#           - play:
+#               generator:  # either scene or generator
+#                 screen:
+#                   monitor: 0
+# run:
+#   fps: 60  # default
+#   scene: playlist  # 'none' is default
