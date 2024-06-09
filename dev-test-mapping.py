@@ -12,7 +12,7 @@ source.run(
     mapping=mapping,
     # generator=source.growing_square(side_size=max(mapping.size)))
     # generator=source.image_zoom('/Users/damien/Downloads/rubik-rotating.gif', size=mapping.size))
-    generator=source.screen(to_size=mapping.size))
+    generator=source.filter(source.screen(to_size=mapping.size)))
 
 # Growing square mapped to mapping (deprecated)
 # from wledcast.mapper import test

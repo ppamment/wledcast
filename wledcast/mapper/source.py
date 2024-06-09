@@ -16,16 +16,44 @@ def run(generator, mapping, fps=30, display=True):
         print(f'fps = {1/spent} ({fps}), {spent}s')
         # yield frame
 
-def screen(to_size):
+def filter(generator,
+        sharpen=0.1,
+        saturation=1.0,
+        brightness=0.3,
+        contrast=1.0,
+        balance_r=1.0,
+        balance_g=0.7,
+        balance_b=0.45
+    ):
+    """
+    Filter generator frames according arguments.
+    """
+    from wledcast.capture import image_processor
+    filters = {
+        "sharpen": sharpen,
+        "saturation": saturation,
+        "brightness": brightness,
+        "contrast": contrast,
+        "balance_r": balance_r,
+        "balance_g": balance_g,
+        "balance_b": balance_b
+    }
+    for frame in generator:
+        yield image_processor.apply_filters_cv2(frame, filters)
+
+def screen(to_size, monitor=0):
+    """
+    Generate frames from monitor (screencast).
+    """
     from wledcast.capture import capture_screen
     from wledcast.model import Box, Size
     import cv2
+    to_size = Size(*(round(x) for x in to_size))
+    window = capture_screen.select_window(monitor=monitor)  # FIXME: monitor=config.args.monitor, title=config.args.title
+    capture_box = capture_screen.get_capture_box(window, to_size)
     while True:
-        led_matrix_shape = Size(*(round(x) for x in to_size))
-        window = capture_screen.select_window(monitor=0)  # FIXME: monitor=config.args.monitor, title=config.args.title
-        capture_box = capture_screen.get_capture_box(window, led_matrix_shape)
         rgb_array = capture_screen.capture(capture_box)
-        rgb_array = cv2.resize(rgb_array, led_matrix_shape, interpolation=cv2.INTER_AREA)
+        rgb_array = cv2.resize(rgb_array, to_size, interpolation=cv2.INTER_AREA)
         yield rgb_array
 
 def growing_square(side_size):
