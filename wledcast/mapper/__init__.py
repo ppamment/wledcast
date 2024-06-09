@@ -11,7 +11,7 @@ mapping.write(np.array(img))
 ```
 """
 
-from . import generator
+from . import generator, controller
 import numpy as np
 from PIL import Image
 import cairosvg
@@ -19,17 +19,28 @@ from typing import List, Tuple, Optional
 import io
 
 class Mapping:
-    def __init__(self, mapping: List[Tuple[int, int]]):
+    def __init__(self, mapping: List[Tuple[int, int]], controllers: dict = {}):
         """
         Initialize the LEDMapper with a given mapping.
 
         :param mapping: A list of tuples representing the ordered positions of each pixel
                         (x, y) in the LED display.
         """
-        self.mapping = mapping
+        self.controllers = controllers
+        if not 'none' in controllers:
+            self.controllers['none'] = controller.Controller(write = lambda pixels: None)
+        for position in mapping:
+            x, y, controller_id = position
+            self.controllers[controller_id].positions.append((x,y))
     
     def __str__(self):
-        return f'Mapping: {len(self.mapping)} pixels, size={self.size}, bbox={self.bbox}'
+        return f'Mapping: {sum(len(c.positions) for id, c in self.controllers.items())} pixels, size={self.size}, bbox={self.bbox}'
+
+    @property
+    def mapping(self) -> Tuple[int, int]:
+        # FIXME: For dev leap: update all users of self.mapping and remove this property.
+        from itertools import chain
+        return chain(*(c.positions for c in self.controllers.values()))
 
     @property
     def bbox(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
@@ -55,7 +66,15 @@ class Mapping:
         height = bbox[1][1] - bbox[0][1] + 1
         return width, height
 
-    def map(self, img: np.ndarray) -> np.ndarray:
+    def write(self, img):
+        """
+        Write image to physical mapping.
+        """
+        for id, controller in self.controllers.items():
+            print(f'Writing {len(controller.positions)} pixels to', id, controller.write)
+            controller.write(self.map(img, controller.positions))
+
+    def map(self, img: np.ndarray, positions) -> np.ndarray:
         """
         Map the pixels from the image to the LED display based on the mapping.
 
@@ -64,7 +83,7 @@ class Mapping:
         """
         height, width, _ = img.shape
         mapped_pixels = []
-        for (x, y) in self.mapping:
+        for (x, y) in positions:
             # Ensure the coordinates are within the image bounds
             if 0 <= x < width and 0 <= y < height:
                 r, g, b = img[int(y), int(x)]
@@ -106,7 +125,7 @@ class Mapping:
             canvas_x = int((x + x_offset) * scalex)
             # Place the first digit of the index at the position of the LED
             if 0 <= canvas_y < height and 0 <= canvas_x < width:
-                label = str(index)
+                label = str(index)  # FIXME: wrong index (see render_svg() using per controller)
                 for i, char in enumerate(label):
                     if rgb_array is not None:  # If rgb_array is provided, colorize the pixel according to the index
                         try:
@@ -138,6 +157,7 @@ class Mapping:
         circle_radius = 15  # Radius of the circle
         font_size = 10  # Font size for the text
         spacing = 2 * circle_radius * scale
+        controller_labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
         # Create the SVG string
         svg_parts = [
@@ -145,16 +165,19 @@ class Mapping:
             f'width="{(max_x + 1) * spacing}" height="{(max_y + 1) * spacing}">'
         ]
 
-        for i, (x, y) in enumerate(self.mapping):
-            cx = x * spacing + circle_radius
-            cy = y * spacing + circle_radius
-            svg_parts.append(
-                f'<circle cx="{cx}" cy="{cy}" r="{circle_radius}" fill="lightblue" stroke="black" stroke-width="1" />'
-            )
-            svg_parts.append(
-                f'<text x="{cx}" y="{cy}" font-size="{font_size}" text-anchor="middle" '
-                f'alignment-baseline="middle" fill="black">{i}</text>'
-            )
+        for j, controller in enumerate(self.controllers.values()):
+            print(controller)
+            for i, (x, y) in enumerate(controller.positions):
+                prefix = controller_labels[j]
+                cx = x * spacing + circle_radius
+                cy = y * spacing + circle_radius
+                svg_parts.append(
+                    f'<circle cx="{cx}" cy="{cy}" r="{circle_radius}" fill="lightblue" stroke="black" stroke-width="1" />'
+                )
+                svg_parts.append(
+                    f'<text x="{cx}" y="{cy}" font-size="{font_size}" text-anchor="middle" '
+                    f'alignment-baseline="middle" fill="black">{prefix}{i}</text>'
+                )
 
         svg_parts.append('</svg>')
         return "\n".join(svg_parts)
@@ -174,8 +197,12 @@ class Mapping:
             raise ValueError("Invalid value for firstled. Choose from 'ascii' or 'svg'")
 
     @staticmethod
-    def load(filename):
+    def load(filename, controllers = {}):
         """
         Return an object Mapping containing the mapping specified in filename (YAML).
         """
-        return Mapping(mapping=generator.load(filename))
+        mapping = generator.load(filename)
+        mapping = generator.map_shape('none', mapping)  # default unmapped positions to controller id 'none'
+        for id, loaded_controller in controller.load(filename).items():
+            controllers[id] = loaded_controller
+        return Mapping(mapping, controllers)

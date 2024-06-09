@@ -4,7 +4,7 @@ mapping = Mapping.load('dev-mapping.yaml')
 print(mapping)
 mapping.display()
 # mapping.display('svg')
-import sys; sys.exit()
+# import sys; sys.exit()
 
 # PixelWriter
 from wledcast.wled.pixel_writer import PixelWriter

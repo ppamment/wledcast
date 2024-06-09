@@ -12,9 +12,9 @@ def growing_square(mapping, pixel_writer, fps=60):
                 start = time.time()
                 array_size = (i, i, 3)
                 rgb_array = np.full(array_size, color, dtype=np.uint8)
-                rgb_array = mapping.map(rgb_array)
-                mapping.display(rgb_array=rgb_array)
-                pixel_writer.update_pixels(np.array(rgb_array))
+                mapping.display(rgb_array=mapping.map(rgb_array, mapping.mapping))  # FIXME: make out what's happening really
+                # pixel_writer.update_pixels(np.array(rgb_array))
+                mapping.write(rgb_array)
                 time.sleep(max(0, 1/fps))
                 spent = time.time()-start
                 print(f'fps = {1/spent} - {spent}s')
@@ -35,9 +35,9 @@ def image_zoom(mapping, pixel_writer, image_filename):
                 border = tuple(int(x) for x in (width/2-crop, height/2-crop, width/2+crop, height/2+crop))
                 rgb_array = np.array(
                     img.crop(border).resize(int(x) for x in mapping.size))
-                rgb_array = mapping.map(rgb_array)
-                mapping.display(rgb_array=rgb_array)
-                pixel_writer.update_pixels(np.array(rgb_array))
+                mapping.display(rgb_array=mapping.map(rgb_array, mapping.mapping))  # FIXME: make out what's happening really
+                # pixel_writer.update_pixels(np.array(rgb_array))
+                mapping.write(rgb_array)
                 time.sleep(max(0, 1/(crop**.75)-(time.time()-start)))
                 # time.sleep(max(0, 1/10-(time.time()-start)))
                 spent = time.time()-start

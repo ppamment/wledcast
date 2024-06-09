@@ -2,34 +2,45 @@ import yaml
 from typing import List, Tuple
 import math
 
+def map_shape(controller_id, positions):
+    # print('Mapping to', controller_id, len(list(filter(bool, (len(p) < 3 for p in positions)))))
+    for i in range(len(positions)):
+        if len(positions[i]) < 3:
+            positions[i] = positions[i] + (controller_id,)
+    return positions  # positions is now a mapping
+
 def load(filename):
     """
     Return a mapping from the given yaml file name.
     """
-    # pixels_sequences = {}
     def create(item):
         fn = next(iter(item.keys()))
         args = item[fn]
         if not args:
             raise IndentationError(f'No args for "{fn}", please check indentation: {item}')
+        controller = args.get('controller', {}) #, {'id': 'none'})
+        if 'controller' in args:
+            del args['controller']
         name = args.get('name', fn)
         if 'name' in args:
             del args['name']
         children = args.get('items', None)
         if 'items' in args:
             del args['items']
-        controller = args.get('controller', )
-        if 'controller' in args:
-            del args['controller']
 
-        mapping = []
+        positions = []
         if children:  # tranformer
-            mapping_children = []
+            positions_children = []
             for child in children:
-                mapping_children += create(child)
-            mapping += create_transformer(fn, args, mapping_children)
+                positions_children += create(child)
+            positions += create_transformer(fn, args, positions_children)
         else:  # shape
-            mapping += create_shape(fn, args)
+            positions += create_shape(fn, args)
+        if controller:
+            mapping = map_shape(controller['id'], positions)
+        else:
+            mapping = positions
+
         return mapping
 
     def create_transformer(fn, args, mapping):
@@ -41,23 +52,6 @@ def load(filename):
     with open(filename, 'r') as file:
         yaml_data = yaml.safe_load(file)
 
-    # TODO: To be tested.
-    # controllers = {}
-    # if 'controller' in yaml_data:
-    #     controller_data = yaml_data['controller']
-    #     for item in controller_data:
-    #         controller_type = next(iter(item.keys()))
-    #         args = item[controller_type]
-    #         try:
-    #             controller_id = args.get('id', args['host'])
-    #             if args['id']:
-    #                 del args['id']
-    #         except KeyError as e:
-    #             raise KeyError(f'controller must specify {e}')
-    #         if controller_id in controllers:
-    #             raise ValueError(f'duplicate id for controller {controller_id}')
-    #         controllers[controller_id] = {'sequence': 0}
-
     mapping = []
     if 'mapping' in yaml_data:
         mapping_data = yaml_data['mapping']
@@ -65,6 +59,7 @@ def load(filename):
             mapping += create(item)
 
     return mapping
+
 
 def matrix(width: int, height: int, firstled: str = 'topleft') -> List[Tuple[int, int]]:
     """
@@ -135,8 +130,15 @@ def translate(mapping, x=0, y=0):
     """
     translated_mapping = []
     for i, pixel in enumerate(mapping):
-        pixel_x, pixel_y = pixel
-        translated_mapping.append((pixel_x+x, pixel_y+y))
+        try: # TODO: Factorize this in a helper
+            # Pixel already mapped
+            pixel_x, pixel_y, controller_id = pixel
+            translated_mapping.append((pixel_x+x, pixel_y+y, controller_id))
+        except ValueError:
+            # Pixel not yet mapped
+            pixel_x, pixel_y = pixel
+            translated_mapping.append((pixel_x+x, pixel_y+y))
+
     return translated_mapping
 
 def include(file):
