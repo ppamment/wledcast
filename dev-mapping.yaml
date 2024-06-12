@@ -18,22 +18,22 @@ controller:
 
 
 mapping:
-  - translate:
-      x: 0
-      y: 0
-      items:
-      - rotate:
-          angle: 0
-          items:
-            - scale:
-                factor: 2.5
-                items:
-                  - matrix:
-                      width: 8
-                      height: 8
-                      firstled: topleft
-                      controller:
-                        id: controller_1
+  # - translate:
+  #     x: 0
+  #     y: 0
+  #     items:
+  #     - rotate:
+  #         angle: 0
+  #         items:
+  #           - scale:
+  #               factor: 2.5
+  #               items:
+  #                 - matrix:
+  #                     width: 8
+  #                     height: 8
+  #                     firstled: topleft
+  #                     controller:
+  #                       id: controller_1
   # - include:
   #     file: 'dev-mapping-matrix-8x8.yaml'
   #     controller:

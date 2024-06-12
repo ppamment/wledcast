@@ -8,10 +8,16 @@ def run(generator, mapping, fps=30, display=True):
     """
     Run the given source `generator` and map frames on `mapping` at `fps`.
     """
+    if type(display) is dict:
+        display_kwargs = display  # arg display can contain **kwargs for calling mapping.display()
+        display = True
+    else:
+        display_kwargs = {}
+
     for frame in generator:
         start = time.time()
         if display:
-            mapping.display(rgb_array=mapping.map(frame, mapping.mapping))  # FIXME: make out what's happening really
+            print(mapping.render_ascii(rgb_array=mapping.map(frame, mapping.mapping), **display_kwargs))
         mapping.write(frame)
         time.sleep(max(0, 1/fps-(time.time()-start)))
         spent = time.time()-start

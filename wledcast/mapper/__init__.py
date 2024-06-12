@@ -62,9 +62,15 @@ class Mapping:
 
         :return: A tuple containing the size of the mapping (width, height).
         """
+        # FIXME:
+        #  - It seem like rings calculation is off by -1 pixel, should we implement a per-shape size computation logic ? :\
+        #  - In the current implementation, the max x,y position is the bbox max x,y;
+        #    it must be possible for Mapping to have a bbox that is bigger the the max x,y position.
         bbox = self.bbox
-        width = bbox[1][0] - bbox[0][0] + 1
-        height = bbox[1][1] - bbox[0][1] + 1
+        width = bbox[1][0] - 0 + 1
+        height = bbox[1][1] - 0 + 1
+        # width = bbox[1][0] - bbox[0][0] + 1
+        # height = bbox[1][1] - bbox[0][1] + 1
         return width, height
 
     def write(self, img):
@@ -99,6 +105,7 @@ class Mapping:
         """
         Creates and prints an ASCII string representing the mapping LEDs on screen.
 
+        :param scale: A scaling factor for the x and y axes.
         :param scalex: A scaling factor for the x-axis.
         :param scaley: A scaling factor for the y-axis. If None, the aspect ratio is maintained.
         """
@@ -116,14 +123,10 @@ class Mapping:
         # Create an empty canvas
         canvas = [[' ' for _ in range(width)] for _ in range(height)]
 
-        # Offset to translate positions to canvas coordinates
-        x_offset = -bbox[0][0]
-        y_offset = -bbox[0][1]
-
         # Place each LED on the canvas
         for index, (x, y) in enumerate(self.mapping):
-            canvas_y = int((y + y_offset) * scaley)
-            canvas_x = int((x + x_offset) * scalex)
+            canvas_x = round(x * scalex)
+            canvas_y = round(y * scaley)
             # Place the first digit of the index at the position of the LED
             if 0 <= canvas_y < height and 0 <= canvas_x < width:
                 label = str(index)  # FIXME: wrong index (see render_svg() using per controller)
@@ -187,7 +190,7 @@ class Mapping:
         Display the mapping.
         """
         if format == 'ascii':
-            print(self.render_ascii(rgb_array=rgb_array))
+            print(self.render_ascii(scale=scale, rgb_array=rgb_array))
         elif format == 'svg':
             svg_data = self.render_svg(scale=scale)
             png_data = cairosvg.svg2png(bytestring=svg_data.encode('utf-8'))  # Load the PNG data into a PIL image
