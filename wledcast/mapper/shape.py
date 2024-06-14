@@ -1,5 +1,5 @@
 import yaml
-from typing import List, Tuple
+from typing import List, Tuple, Union
 import math
 
 def map_controller(controller_id, positions, force=False):
@@ -81,38 +81,81 @@ def load(filename):  # TODO: Move to module mapper
 
 # Shapes: an array of (x, y) positions.
 
-def matrix(width: int, height: int, firstled: str = 'topleft') -> List[Tuple[int, int]]:
+def matrix(width: int, height: int, firstled: str = 'topleft', serpentine: Union[bool, str] = False) -> List[Tuple[int, int]]:
     """
-    Generate a mapping for an 2D LED matrix.
+    Generate a mapping for a 2D LED matrix.
 
     :param width: The width of the matrix.
     :param height: The height of the matrix.
     :param firstled: The position of the first LED. Options are 'topleft', 'topright', 'bottomleft', 'bottomright'.
+    :param serpentine: Whether the matrix is wired in a serpentine pattern. Options are False, 'horizontal', 'vertical'. 
+                       True is equivalent to 'horizontal'.
     :return: A list of tuples representing the position of each LED in the matrix.
     """
+    # Map True to 'horizontal'
+    if serpentine is True:
+        serpentine = 'horizontal'
+
     mapping = []
 
-    if firstled == 'topleft':
-        for y in range(height):
-            row = [(x, y) for x in range(width)]
-            mapping.extend(row)
-    elif firstled == 'topright':
-        for y in range(height):
-            row = [(x, y) for x in range(width-1, -1, -1)]
-            mapping.extend(row)
-    elif firstled == 'bottomleft':
-        for y in range(height-1, -1, -1):
-            row = [(x, y) for x in range(width)]
-            mapping.extend(row)
-    elif firstled == 'bottomright':
-        for y in range(height-1, -1, -1):
-            row = [(x, y) for x in range(width-1, -1, -1)]
-            mapping.extend(row)
+    if serpentine == 'vertical':
+        # Generate vertical serpentine mapping
+        if firstled == 'topleft':
+            for x in range(width):
+                column = [(x, y) for y in range(height)]
+                if x % 2 == 1:
+                    column.reverse()
+                mapping.extend(column)
+        elif firstled == 'topright':
+            for x in range(width-1, -1, -1):
+                column = [(x, y) for y in range(height)]
+                if (width - 1 - x) % 2 == 1:
+                    column.reverse()
+                mapping.extend(column)
+        elif firstled == 'bottomleft':
+            for x in range(width):
+                column = [(x, y) for y in range(height-1, -1, -1)]
+                if x % 2 == 1:
+                    column.reverse()
+                mapping.extend(column)
+        elif firstled == 'bottomright':
+            for x in range(width-1, -1, -1):
+                column = [(x, y) for y in range(height-1, -1, -1)]
+                if (width - 1 - x) % 2 == 1:
+                    column.reverse()
+                mapping.extend(column)
+        else:
+            raise ValueError("Invalid value for firstled. Choose from 'topleft', 'topright', 'bottomleft', 'bottomright'.")
     else:
-        raise ValueError("Invalid value for firstled. Choose from 'topleft', 'topright', 'bottomleft', 'bottomright'.")
+        # Generate horizontal serpentine or standard mapping
+        if firstled == 'topleft':
+            for y in range(height):
+                row = [(x, y) for x in range(width)]
+                if serpentine == 'horizontal' and y % 2 == 1:
+                    row.reverse()
+                mapping.extend(row)
+        elif firstled == 'topright':
+            for y in range(height):
+                row = [(x, y) for x in range(width-1, -1, -1)]
+                if serpentine == 'horizontal' and y % 2 == 1:
+                    row.reverse()
+                mapping.extend(row)
+        elif firstled == 'bottomleft':
+            for y in range(height-1, -1, -1):
+                row = [(x, y) for x in range(width)]
+                if serpentine == 'horizontal' and y % 2 == 0:
+                    row.reverse()
+                mapping.extend(row)
+        elif firstled == 'bottomright':
+            for y in range(height-1, -1, -1):
+                row = [(x, y) for x in range(width-1, -1, -1)]
+                if serpentine == 'horizontal' and y % 2 == 0:
+                    row.reverse()
+                mapping.extend(row)
+        else:
+            raise ValueError("Invalid value for firstled. Choose from 'topleft', 'topright', 'bottomleft', 'bottomright'.")
 
     return mapping
-
 
 def ring(length: int, diameter: int, angle: int = 0, reverse: bool = False, crop:int = 0) -> List[Tuple[float, float]]:
     """
@@ -185,34 +228,34 @@ def translate(mapping, x=0, y=0):  # TODO: Also rotate_centroid() and rotate_ref
 
     return translated_mapping
 
-def rotate(mapping, angle):
-    """
-    Return a rotated mapping by a given angle in degrees.
+# def rotate(mapping, angle):
+#     """
+#     Return a rotated mapping by a given angle in degrees.
 
-    :param mapping: A list of tuples representing the (x, y) position of each LED.
-    :param angle: The angle to rotate the mapping, in degrees.
-    :return: A rotated mapping.
-    """
-    angle_rad = math.radians(angle)
-    cos_angle = math.cos(angle_rad)
-    sin_angle = math.sin(angle_rad)
+#     :param mapping: A list of tuples representing the (x, y) position of each LED.
+#     :param angle: The angle to rotate the mapping, in degrees.
+#     :return: A rotated mapping.
+#     """
+#     angle_rad = math.radians(angle)
+#     cos_angle = math.cos(angle_rad)
+#     sin_angle = math.sin(angle_rad)
 
-    rotated_mapping = []
-    for i, pixel in enumerate(mapping):
-        try: # Handle pixels with and without controller_id
-            # Pixel already mapped
-            pixel_x, pixel_y, controller_id = pixel
-            new_x = pixel_x * cos_angle - pixel_y * sin_angle
-            new_y = pixel_x * sin_angle + pixel_y * cos_angle
-            rotated_mapping.append((new_x, new_y, controller_id))
-        except ValueError:
-            # Pixel not yet mapped
-            pixel_x, pixel_y = pixel
-            new_x = pixel_x * cos_angle - pixel_y * sin_angle
-            new_y = pixel_x * sin_angle + pixel_y * cos_angle
-            rotated_mapping.append((new_x, new_y))
+#     rotated_mapping = []
+#     for i, pixel in enumerate(mapping):
+#         try: # Handle pixels with and without controller_id
+#             # Pixel already mapped
+#             pixel_x, pixel_y, controller_id = pixel
+#             new_x = pixel_x * cos_angle - pixel_y * sin_angle
+#             new_y = pixel_x * sin_angle + pixel_y * cos_angle
+#             rotated_mapping.append((new_x, new_y, controller_id))
+#         except ValueError:
+#             # Pixel not yet mapped
+#             pixel_x, pixel_y = pixel
+#             new_x = pixel_x * cos_angle - pixel_y * sin_angle
+#             new_y = pixel_x * sin_angle + pixel_y * cos_angle
+#             rotated_mapping.append((new_x, new_y))
 
-    return rotated_mapping
+#     return rotated_mapping
 
 # def rotate_adjusted(mapping, angle):
 #     from wledcast.mapper import Mapping
@@ -222,54 +265,54 @@ def rotate(mapping, angle):
 #     print(bbox, offset_x, offset_y)
 #     return translate(mapping, x=offset_x, y=offset_y)
 
-# def rotate_centroid(mapping, angle):
-#     """
-#     Return a mapping rotated around its centroid by a given angle in degrees.
+def rotate(mapping, angle):  # centroid
+    """
+    Return a mapping rotated around its centroid by a given angle in degrees.
 
-#     :param mapping: A list of tuples representing the (x, y) position of each LED.
-#     :param angle: The angle to rotate the mapping, in degrees.
-#     :return: A rotated mapping.
-#     """
-#     # Calculate the centroid
-#     n = len(mapping)
-#     centroid_x = sum(x for x, y, *rest in mapping) / n
-#     centroid_y = sum(y for x, y, *rest in mapping) / n
+    :param mapping: A list of tuples representing the (x, y) position of each LED.
+    :param angle: The angle to rotate the mapping, in degrees.
+    :return: A rotated mapping.
+    """
+    # Calculate the centroid
+    n = len(mapping)
+    centroid_x = sum(x for x, y, *rest in mapping) / n
+    centroid_y = sum(y for x, y, *rest in mapping) / n
 
-#     # Convert angle to radians
-#     angle_rad = math.radians(angle)
-#     cos_angle = math.cos(angle_rad)
-#     sin_angle = math.sin(angle_rad)
+    # Convert angle to radians
+    angle_rad = math.radians(angle)
+    cos_angle = math.cos(angle_rad)
+    sin_angle = math.sin(angle_rad)
 
-#     rotated_mapping = []
-#     for pixel in mapping:
-#         try:  # Handle pixels with and without controller_id
-#             # Pixel already mapped
-#             pixel_x, pixel_y, controller_id = pixel
-#             # Translate pixel to origin
-#             trans_x = pixel_x - centroid_x
-#             trans_y = pixel_y - centroid_y
-#             # Rotate pixel
-#             new_x = trans_x * cos_angle - trans_y * sin_angle
-#             new_y = trans_x * sin_angle + trans_y * cos_angle
-#             # Translate pixel back
-#             new_x += centroid_x
-#             new_y += centroid_y
-#             rotated_mapping.append((new_x, new_y, controller_id))
-#         except ValueError:
-#             # Pixel not yet mapped
-#             pixel_x, pixel_y = pixel
-#             # Translate pixel to origin
-#             trans_x = pixel_x - centroid_x
-#             trans_y = pixel_y - centroid_y
-#             # Rotate pixel
-#             new_x = trans_x * cos_angle - trans_y * sin_angle
-#             new_y = trans_x * sin_angle + trans_y * cos_angle
-#             # Translate pixel back
-#             new_x += centroid_x
-#             new_y += centroid_y
-#             rotated_mapping.append((new_x, new_y))
+    rotated_mapping = []
+    for pixel in mapping:
+        try:  # Handle pixels with and without controller_id
+            # Pixel already mapped
+            pixel_x, pixel_y, controller_id = pixel
+            # Translate pixel to origin
+            trans_x = pixel_x - centroid_x
+            trans_y = pixel_y - centroid_y
+            # Rotate pixel
+            new_x = trans_x * cos_angle - trans_y * sin_angle
+            new_y = trans_x * sin_angle + trans_y * cos_angle
+            # Translate pixel back
+            new_x += centroid_x
+            new_y += centroid_y
+            rotated_mapping.append((new_x, new_y, controller_id))
+        except ValueError:
+            # Pixel not yet mapped
+            pixel_x, pixel_y = pixel
+            # Translate pixel to origin
+            trans_x = pixel_x - centroid_x
+            trans_y = pixel_y - centroid_y
+            # Rotate pixel
+            new_x = trans_x * cos_angle - trans_y * sin_angle
+            new_y = trans_x * sin_angle + trans_y * cos_angle
+            # Translate pixel back
+            new_x += centroid_x
+            new_y += centroid_y
+            rotated_mapping.append((new_x, new_y))
 
-#     return rotated_mapping
+    return rotated_mapping
 
 def include(file):
     return load(file)

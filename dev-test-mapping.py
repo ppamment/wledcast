@@ -11,10 +11,12 @@ source.run(
     fps=25,
     mapping=mapping,
     display={'scale': 2.5},
-    # generator=source.growing_square(side_size=max(mapping.size)))
-    # generator=source.image_zoom('/Users/damien/Downloads/rubik-rotating.gif', size=mapping.size))
     generator=source.filter(
-        brightness=0.1,
+        # sharpen=.15,
+        # brightness=.2,
+        # contrast=1.5,
+        # generator=source.growing_square(side_size=max(mapping.size))))
+        # generator=source.image_zoom('/Users/damien/Downloads/rubik-rotating.gif', size=mapping.size)))
         generator=source.screen(to_size=mapping.size)))
 
 # Growing square mapped to mapping (deprecated)

@@ -6,7 +6,7 @@ controller:
       host: ring.local
       id: controller_2
   - ddp:
-      host: clock.local
+      host: panel.local #clock.local
       id: controller_3
   # - e131:
   #     host: example.com
@@ -16,44 +16,54 @@ controller:
   # - beamer:
   #     ...
 
+# filter:  # TODO: like controllers, let have filters per shape to calibrate colors ?
+#   - cv2:
+#       id: multiring
+#       sharpen: 0.1
+#       saturation: 1.0
+#       brightness: 0.5
+#       contrast: 2.0
+#       balance_r: 0.75
+#       balance_g: 0.8
+#       balance_b: 0.85
 
 mapping:
-  # - translate:
-  #     x: 0
-  #     y: 0
-  #     items:
-  #     - rotate:
-  #         angle: 0
-  #         items:
-  #           - scale:
-  #               factor: 2.5
-  #               items:
-  #                 - matrix:
-  #                     width: 8
-  #                     height: 8
-  #                     firstled: topleft
-  #                     controller:
-  #                       id: controller_1
-  # - include:
-  #     file: 'dev-mapping-matrix-8x8.yaml'
-  #     controller:
-  #       id: controller_1
   - translate:
-      # disabled: true
-      x: 6
+      x: 16
       items:
-      - include:
-          file: 'dev-mapping-multiring.yaml'
-          controller:
-            id: controller_2
-  - translate:
-      x: 25
-      y: 0.8
-      items:
-        - include:
-            file: 'dev-mapping-clock.yaml'
-            controller:
-              id: controller_3
+        - translate:
+            x: 56.6
+            y: 10
+            items:
+              - rotate:
+                  angle: 135  # 180-45
+                  items:
+                    - include:
+                        file: 'dev-mapping-matrix-32x32.yaml'
+                        controller:
+                          id: controller_3
+        - translate:
+            x: 17.6
+            y: 17
+            items:
+              - rotate:
+                  angle: 90
+                  items:
+                    - include:
+                        file: 'dev-mapping-matrix-32x32.yaml'
+                        controller:
+                          id: controller_3
+        - translate:
+            x: 8.3
+            y: 40.3
+            items:
+              - rotate:
+                  angle: 0
+                  items:
+                    - include:
+                        file: 'dev-mapping-multiring.yaml'
+                        controller:
+                          id: controller_3
 
 
 # # TODO: Scenes definition and startup run instruction

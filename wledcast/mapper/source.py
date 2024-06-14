@@ -4,7 +4,7 @@ import time
 
 # TODO: Implement Glediator protocol in source glediator(): https://www.youtube.com/watch?v=lQv3cHG1-XQ&t=517s
 
-def run(generator, mapping, fps=30, display=True):
+def run(generator, mapping, fps=30, display=True, failsafe=True):
     """
     Run the given source `generator` and map frames on `mapping` at `fps`.
     """
@@ -18,20 +18,26 @@ def run(generator, mapping, fps=30, display=True):
         start = time.time()
         if display:
             print(mapping.render_ascii(rgb_array=mapping.map(frame, mapping.mapping), **display_kwargs))
-        mapping.write(frame)
+        try:
+            mapping.write(frame)
+        except Exception as e:
+            if failsafe:
+                print(f'ERROR: {e.__class__.__name__}: {e}')
+            else:
+                raise e
         time.sleep(max(0, 1/fps-(time.time()-start)))
         spent = time.time()-start
         print(f'fps = {1/spent} ({fps}), {spent}s')
         # yield frame
 
 def filter(generator,  # FIXME: filter() should be appliable per controller, or better: per shape
-        sharpen=0.1,   #        because each controller/shape can have different physical LEDs with their own bias
-        saturation=1.0,
-        brightness=0.5,
-        contrast=2.0,
-        balance_r=0.75,
-        balance_g=0.8,
-        balance_b=0.85
+        sharpen=0.025,   #        because each controller/shape can have different physical LEDs with their own bias
+        saturation=2.5,
+        brightness=0.2,
+        contrast=3,
+        balance_r=0.45,
+        balance_g=0.9,
+        balance_b=0.6
     ):
     """
     Filter generator frames according arguments.
@@ -47,7 +53,10 @@ def filter(generator,  # FIXME: filter() should be appliable per controller, or 
         "balance_b": balance_b
     }
     for frame in generator:
-        yield image_processor.apply_filters_cv2(frame, filters)
+        try:
+            yield image_processor.apply_filters_cv2(frame, filters)
+        except Exception as e:
+            print(f'ERROR: {e.__class__.__name__}: {e}')
 
 def screen(to_size, monitor=0):  # FIXME: Add function screen_discover to list available screens and windows ?
     """
