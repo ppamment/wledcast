@@ -4,7 +4,7 @@ import time
 
 # TODO: Implement Glediator protocol in source glediator(): https://www.youtube.com/watch?v=lQv3cHG1-XQ&t=517s
 
-def run(generator, mapping, fps=30, display=True, failsafe=True):
+def run(generator, mapping, fps=30, display=False, failsafe=True):
     """
     Run the given source `generator` and map frames on `mapping` at `fps`.
     """
@@ -34,10 +34,10 @@ def filter(generator,  # FIXME: filter() should be appliable per controller, or 
         sharpen=0.025,   #        because each controller/shape can have different physical LEDs with their own bias
         saturation=2.5,
         brightness=0.2,
-        contrast=3,
-        balance_r=0.45,
+        contrast=1,
+        balance_r=0.75,
         balance_g=0.9,
-        balance_b=0.6
+        balance_b=0.8
     ):
     """
     Filter generator frames according arguments.
