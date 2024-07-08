@@ -31,13 +31,13 @@ def run(generator, mapping, fps=30, display=False, failsafe=True):
         # yield frame
 
 def filter(generator,  # FIXME: filter() should be appliable per controller, or better: per shape
-        sharpen=0.025,   #        because each controller/shape can have different physical LEDs with their own bias
-        saturation=2.5,
-        brightness=0.2,
-        contrast=1,
-        balance_r=0.75,
-        balance_g=0.9,
-        balance_b=0.8
+        sharpen=0.0,   #        because each controller/shape can have different physical LEDs with their own bias
+        saturation=3.0,
+        brightness=0.15,
+        contrast=2,
+        balance_r=0.9,
+        balance_g=1.0,
+        balance_b=0.9
     ):
     """
     Filter generator frames according arguments.

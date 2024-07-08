@@ -10,11 +10,11 @@ print(mapping)
 source.run(
     fps=25,
     mapping=mapping,
-    display={'scale': 2.5},
+    display={'scale': 0.5},
     generator=source.filter(
         # sharpen=.15,
         # brightness=.2,
-        # contrast=1.5,
+        # contrast=1.0,
         # generator=source.growing_square(side_size=max(mapping.size))))
         # generator=source.image_zoom('/Users/damien/Downloads/rubik-rotating.gif', size=mapping.size)))
         generator=source.screen(to_size=mapping.size)))
