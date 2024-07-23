@@ -14,30 +14,37 @@ def run(generator, mapping, fps=30, display=False, failsafe=True):
     else:
         display_kwargs = {}
 
+    i = 0
+    last = None
     for frame in generator:
         start = time.time()
-        if display:
-            print(mapping.render_ascii(rgb_array=mapping.map(frame, mapping.mapping), **display_kwargs))
-        try:
-            mapping.write(frame)
-        except Exception as e:
-            if failsafe:
-                print(f'ERROR: {e.__class__.__name__}: {e}')
-            else:
-                raise e
+        if not i % fps or not np.array_equiv(last, frame):
+            last = frame
+            if display:
+                print(mapping.render_ascii(rgb_array=mapping.map(frame, mapping.mapping), **display_kwargs))
+            try:
+                mapping.write(frame)
+            except Exception as e:
+                if failsafe:
+                    print(f'ERROR: {e.__class__.__name__}: {e}')
+                else:
+                    raise e
+        else:
+            print('Skipping duplicate frame.')
         time.sleep(max(0, 1/fps-(time.time()-start)))
         spent = time.time()-start
-        print(f'fps = {1/spent} ({fps}), {spent}s')
+        print(f'#{i}: {1/spent:.2f}fps ({fps}), {spent:.3f}s')
+        i += 1
         # yield frame
 
 def filter(generator,  # FIXME: filter() should be appliable per controller, or better: per shape
-        sharpen=0.0,   #        because each controller/shape can have different physical LEDs with their own bias
-        saturation=3.0,
-        brightness=0.15,
-        contrast=2,
-        balance_r=0.9,
-        balance_g=1.0,
-        balance_b=0.9
+        sharpen=1,     #        because each controller/shape can have different physical LEDs with their own bias
+        brightness=1,
+        contrast=1,
+        saturation=1,
+        balance_r=1,
+        balance_g=1,
+        balance_b=1
     ):
     """
     Filter generator frames according arguments.
