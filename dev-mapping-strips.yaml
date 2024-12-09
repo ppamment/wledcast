@@ -1,0 +1,85 @@
+mapping:
+  - translate:
+      x: 28
+      y: 0
+      items:
+        - translate:
+            x: -14
+            y: 0
+            items:
+              - rotate:
+                  angle: -28
+                  items:
+                    - matrix:
+                        width: 1
+                        height: 60
+        - translate:
+            x: -10
+            y: 0
+            items:
+              - rotate:
+                  angle: -20
+                  items:
+                    - matrix:
+                        width: 1
+                        height: 60
+        - translate:
+            x: -6
+            y: 0
+            items:
+              - rotate:
+                  angle: -12
+                  items:
+                    - matrix:
+                        width: 1
+                        height: 60
+        - translate:
+            x: -2
+            y: 0
+            items:
+              - rotate:
+                  angle: -4
+                  items:
+                    - matrix:
+                        width: 1
+                        height: 60
+        - translate:
+            x: 2
+            y: 0
+            items:
+              - rotate:
+                  angle: 4
+                  items:
+                    - matrix:
+                        width: 1
+                        height: 60
+        - translate:
+            x: 6
+            y: 0
+            items:
+              - rotate:
+                  angle: 12
+                  items:
+                    - matrix:
+                        width: 1
+                        height: 60
+        - translate:
+            x: 10
+            y: 0
+            items:
+              - rotate:
+                  angle: 20
+                  items:
+                    - matrix:
+                        width: 1
+                        height: 60
+        - translate:
+            x: 14
+            y: 0
+            items:
+              - rotate:
+                  angle: 28
+                  items:
+                    - matrix:
+                        width: 1
+                        height: 60
