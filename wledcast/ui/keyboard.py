@@ -6,7 +6,7 @@ import keyboard
 import wx
 from wxasync import WxAsyncApp
 
-from wledcast.config import border_size, max_x, max_y
+from wledcast.config import border_size, max_x, max_y, min_desktop_x, min_desktop_y
 from wledcast.model import Box
 
 logger = logging.getLogger(__name__)
@@ -27,14 +27,14 @@ def setup_keybinds(
 
     def adjust_position(delta_x: int, delta_y: int):
         delta_x = max(
-            border_size - capture_box.left,
+            min_desktop_x + border_size - capture_box.left,
             min(
                 max_x - (capture_box.left + capture_box.width + border_size),
                 delta_x,
             ),
         )
         delta_y = max(
-            border_size - capture_box.top,
+            min_desktop_y + border_size - capture_box.top,
             min(
                 max_y - (capture_box.top + capture_box.height + border_size),
                 delta_y,

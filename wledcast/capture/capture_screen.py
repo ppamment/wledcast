@@ -46,7 +46,8 @@ def select_window(
             return monitors[monitor]
         elif monitor == -1 and len(monitors) > 0:
             return select_from_list(monitors, "name")
-        logger.info(f"Found 0 monitors")
+        else:
+            logger.warning(f"Invalid monitor index {monitor}, found {len(monitors)} monitors")
     # Get the list of open windows
     windows: list[pywinctl.Window] = pywinctl.getAllWindows()
     logger.info(f"Found {len(windows)} windows total")

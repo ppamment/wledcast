@@ -11,10 +11,8 @@ logger = logging.getLogger(__name__)
 class TransparentWindow(wx.Frame):
     def __init__(self, parent, title, capture_box: Box):
         self.capture_box = capture_box
-        self.capture_box.left = max(
-            border_size // 2, capture_box.left + border_size // 2
-        )
-        self.capture_box.top = max(border_size // 2, capture_box.top + border_size // 2)
+        self.capture_box.left = capture_box.left + border_size // 2
+        self.capture_box.top = capture_box.top + border_size // 2
         adjusted_width = min(
             max_x - self.capture_box.left - 2 * border_size, capture_box.width
         )
