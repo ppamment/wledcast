@@ -14,9 +14,8 @@ class PixelWriter:
 
     def update_pixels(self, rgb_array: numpy.ndarray):
         # Update the LED matrix via WLED in real-time using DDP
-        flat_screen_data = rgb_array.flatten().tolist()
-        # Convert the list to a bytearray
-        byte_data = bytearray(flat_screen_data)
+        # Convert numpy array directly to bytes for better performance
+        byte_data = rgb_array.flatten().tobytes()
 
         self._send_ddp_data(byte_data)
 
