@@ -1,4 +1,11 @@
-A cross platform python application for capturing an area of your screen and streaming it to any WLED device over UDP using the DDP realtime protocol.
+A cross platform python application for capturing an area of your screen and streaming it to any WLED device over UDP using the DDP realtime protocol. Here it is casting to a 32x32 LED matrix. 
+
+
+
+https://github.com/user-attachments/assets/ef07709c-d612-429a-a3a2-28bfc5f7d2c7
+
+
+
 
 Maybe I just wasn't looking very hard, but I didn't find a simple tool already existing that does this.
 
