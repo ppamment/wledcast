@@ -57,7 +57,14 @@ def select_instance(instances: list[str]) -> Union[str, None]:
     print("Please select a WLED instance to cast to:")
     for i, instance in enumerate(instances):
         print(f"{i+1}. {instance}")
-    selected_index = int(input("Enter the number of your selection: ")) - 1
+    
+    try:
+        selection = input("Enter the number of your selection: ").strip()
+        selected_index = int(selection) - 1
+    except ValueError:
+        print(f"Invalid input '{selection}'. Please enter a number.")
+        return select_instance(instances)
+    
     if selected_index < 0 or selected_index >= len(instances):
         print("Invalid selection. Please try again.")
         return select_instance(instances)
