@@ -61,27 +61,52 @@ class TransparentWindow(wx.Frame):
     def OnMouseDown(self, event):
         try:
             self.CaptureMouse()
+        except Exception as e:
+            logger.info(f"Failed to capture mouse: {e}")
+            return
+        
+        try:
             self.dragging = True
             self.dragStartPos = event.GetPosition()
         except Exception as e:
-            logger.info(f"Failed to capture mouse: {e}")
+            logger.info(f"Error after mouse capture: {e}")
+            # Ensure mouse is released if we captured it but failed after
+            try:
+                if self.HasCapture():
+                    self.ReleaseMouse()
+            except:
+                pass
 
     def OnRightMouseDown(self, event):
         try:
             self.CaptureMouse()
+        except Exception as e:
+            logger.info(f"Failed to capture mouse: {e}")
+            return
+        
+        try:
             self.resizing = True
             self.dragStartPos = event.GetPosition()
         except Exception as e:
-            logger.info(f"Failed to capture mouse: {e}")
+            logger.info(f"Error after mouse capture: {e}")
+            # Ensure mouse is released if we captured it but failed after
+            try:
+                if self.HasCapture():
+                    self.ReleaseMouse()
+            except:
+                pass
 
     def OnMouseUp(self, event):
+        # Always try to release mouse first, then handle other cleanup
         try:
             if self.HasCapture():
                 self.ReleaseMouse()
-            self.dragging = False
-            self.resizing = False
         except Exception as e:
             logger.info(f"Failed to release mouse: {e}")
+        finally:
+            # Always reset state regardless of mouse release success
+            self.dragging = False
+            self.resizing = False
 
     def OnMouseMove(self, event):
         if self.dragging:
@@ -145,3 +170,12 @@ class TransparentWindow(wx.Frame):
         # Recreate the shape bitmap when the window is resized
         self.CreateShapeBitmap(event.GetSize())
         event.Skip()
+
+    def Destroy(self):
+        # Ensure mouse is released before destroying window
+        try:
+            if self.HasCapture():
+                self.ReleaseMouse()
+        except:
+            pass  # Ignore any errors during cleanup
+        return super().Destroy()
