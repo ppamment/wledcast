@@ -67,7 +67,7 @@ def main():
 
     if (
         config.args.output_resolution is not None
-        and type(config.args.output_resolution.split("x")) is tuple
+        and len(config.args.output_resolution.split("x")) == 2
     ):
         w, h = config.args.output_resolution.split("x")
         led_matrix_shape = Size(int(w), int(h))
