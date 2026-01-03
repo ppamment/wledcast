@@ -1,0 +1,32 @@
+mapping:
+  - translate:
+      items:
+        - matrix:
+            width: 32
+            height: 8
+            firstled: bottomright
+            serpentine: vertical
+  - translate:
+      y: 8
+      items:
+        - matrix:
+            width: 32
+            height: 8
+            firstled: topleft
+            serpentine: vertical
+  - translate:
+      y: 16
+      items:
+        - matrix:
+            width: 32
+            height: 8
+            firstled: bottomright
+            serpentine: vertical
+  - translate:
+      y: 24
+      items:
+        - matrix:
+            width: 32
+            height: 8
+            firstled: topleft
+            serpentine: vertical

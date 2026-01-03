@@ -1,0 +1,95 @@
+controller:
+  - ddp:
+      host: wled-matrix.local
+      id: controller_1  # TODO: name defaults to host
+  - ddp:
+      host: ring.local
+      id: controller_2
+  - ddp:
+      host: panel.local #clock.local
+      id: controller_3
+  # - e131:
+  #     host: example.com
+  #     ...
+  # - esphome:
+  #     host: example.com
+  # - beamer:
+  #     ...
+
+# filter:  # TODO: like controllers, let have filters per shape to calibrate colors ?
+#   - cv2:
+#       id: multiring
+#       sharpen: 0.1
+#       saturation: 1.0
+#       brightness: 0.5
+#       contrast: 2.0
+#       balance_r: 0.75
+#       balance_g: 0.8
+#       balance_b: 0.85
+
+mapping:
+  - translate:
+      x: 16
+      items:
+        - translate:
+            x: 56.6
+            y: 10
+            items:
+              - rotate:
+                  angle: 135  # 180-45
+                  items:
+                    - include:
+                        file: 'dev-mapping-matrix-32x32.yaml'
+                        controller:
+                          id: controller_3
+        - translate:
+            x: 17.6
+            y: 17
+            items:
+              - rotate:
+                  angle: 90
+                  items:
+                    - include:
+                        file: 'dev-mapping-matrix-32x32.yaml'
+                        controller:
+                          id: controller_3
+        - translate:
+            x: 8.3
+            y: 40.3
+            items:
+              - rotate:
+                  angle: 0
+                  items:
+                    - include:
+                        file: 'dev-mapping-multiring.yaml'
+                        controller:
+                          id: controller_3
+
+
+# # TODO: Scenes definition and startup run instruction
+
+# scenes:
+#   - id: none
+#     generator:
+#       mapping: none  # default (same system like default id 'none' in Mapping.controllers)
+#       generator:
+#         filter:
+#           brightness: 0.5
+#           generator:
+#             screen:
+#               monitor: 0
+#   - id: playlist
+#     generator:
+#       playlist:
+#         generators:
+#           - play:
+#               loop: 3
+#               duration: 10
+#               scene: none  # either scene or generator
+#           - play:
+#               generator:  # either scene or generator
+#                 screen:
+#                   monitor: 0
+# run:
+#   fps: 60  # default
+#   scene: playlist  # 'none' is default

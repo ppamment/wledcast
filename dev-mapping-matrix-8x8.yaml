@@ -1,0 +1,5 @@
+mapping:
+  - matrix:
+      width: 8
+      height: 8
+      firstled: topleft

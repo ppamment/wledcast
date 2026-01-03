@@ -1,0 +1,7 @@
+mapping:
+  - translate:
+      items:
+        - matrix:
+            width: 32
+            height: 32
+            firstled: topleft
