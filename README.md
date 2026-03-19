@@ -32,26 +32,36 @@ Issues and PRs are welcomed. This is still alpha at the moment. In my testing it
 | Option                   | Desctription                                                                                                      |
 |:-------------------------|:------------------------------------------------------------------------------------------------------------------|
 | --host HOST              | Skip network discovery and cast to this IP address                                                                |
-| --title TITLE            | Cast the window whost title contains TITLE                                                                        |
+| --title TITLE            | Cast the window whose title contains TITLE                                                                        |
 | --monitor [NUMBER]       | Cast a monitor rather than a window. Optionally pass the monitor number, else you'll be asked                     |
 | --output-resolution      | Skip resolution discovery from WLED and use this (format 64x32)                                                   |
 | --live-preview           | Show the output in a preview pane on the computer                                                                 |
 | --fps FPS                | Limit fps to FPS. 500 LEDS per GPIO is stable up to around 40Hz on and ESP32-WROOM for me but YMMV. Default 30    |
 | --search-timeout TIMEOUT | Timeout for WLED network discovery, defaults to 3s. Increase if your latency is higher and devices are not found. |
 | --workers [NUM]          | Number of workers capturing and sending data. Only increase if necessary to meet framerate.                       |
-| --debug                  | Endable debug logs                                                                                                |
+| --debug                  | Enable debug logs                                                                                                 |
 
 To implement:
      
 ### Installation
 ______
-Requires Python >=3.10. Create and activate a conda/venv, If you aren't sure how, I recommend [micromamba (install here)](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html)  as it's very lightweight and fast:
+Requires Python >=3.10. [uv](https://docs.astral.sh/uv/) is recommended for managing Python versions and virtual environments:
 ```shell
-micromamba create -n wledcast -c conda-forge python=3.11
-micromamba activate wledcast
+uv python install 3.11   # if needed
 ```
 
-#### With pip (recommended)
+#### With uv (recommended)
+```shell
+uv tool install wledcast
+wledcast
+```
+
+Or run without installing:
+```shell
+uvx wledcast
+```
+
+#### With pip
 ```shell
 pip install wledcast
 wledcast
@@ -59,6 +69,14 @@ wledcast
 
 #### From source (developers/contributors)
 Clone the repo, install the package (editable):
+```shell
+git clone https://github.com/ppamment/wledcast.git
+cd wledcast
+uv sync
+uv run wledcast
+```
+
+Or with pip:
 ```shell
 git clone https://github.com/ppamment/wledcast.git
 cd wledcast

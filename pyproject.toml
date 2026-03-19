@@ -20,17 +20,19 @@ classifiers = [
 ]
 
 dependencies = [
+    "aiofiles>=23.2",
     "asciimatics>=1.15,<2.0",
     "keyboard>=0.13.5,<1.0",
     "mss>=9.0",
-    "numpy>=1.26,<2.0",
+    "numpy>=1.26",
     "opencv-python>=4.8,<5.0",
+    "pillow>=10.0",
+    "pymonctl>=0.4",
     "pywinctl>=0.3,<1.0",
     "requests>=2.31.0",
+    "wxasync>=0.49",
     "wxpython>=4.2,<5.0",
     "zeroconf>=0.127.0",
-    "wxasync>=0.49",
-    "aiofiles>=23.2",
 ]
 
 [project.urls]
@@ -38,21 +40,11 @@ homepage = "https://github.com/ppamment/wledcast"
 repository = "https://github.com/ppamment/wledcast"
 Bug-Tracker = "https://github.com/ppamment/wledcast/issues"
 
-[metadata]
-author = "Paul Pamment"
-long_description = "file: README.md"
-long_description_content_type = "text/markdown"
-url = "https://github.com/ppamment/wledcast"
-
 [tool.setuptools.package-data]
 wledcast = ["filter.json"]
 
 [project.scripts]
 wledcast = 'wledcast.__main__:main'
-
-[options]
-python_requires = ">=3.10"
-packages = "find: ."
 
 [build-system]
 requires = ["setuptools>=42", "wheel"]
