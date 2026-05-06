@@ -23,7 +23,7 @@ class PixelWriter:
         header = bytearray(10)
         header[0] = 0b01000000 | (0b00000001 if is_last_packet else 0)
         header[1] = self.sequence_id
-        header[2] = 0x01  # Data type set to 01
+        header[2] = 0x0B  # RGB, 8 bits per element
         header[3] = self.DDP_DESTINATION_ID
         header[4:8] = data_offset.to_bytes(4, byteorder="big")
         header[8:10] = len(data).to_bytes(2, byteorder="big")
