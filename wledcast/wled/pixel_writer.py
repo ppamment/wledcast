@@ -22,7 +22,7 @@ class PixelWriter:
     def _create_ddp_packet(self, data, data_offset, is_last_packet=False):
         header = bytearray(10)
         header[0] = 0b01000000 | (0b00000001 if is_last_packet else 0)
-        header[1] = self.sequence_id
+        header[1] = 0x0B
         header[2] = 0x01  # Data type set to 01
         header[3] = self.DDP_DESTINATION_ID
         header[4:8] = data_offset.to_bytes(4, byteorder="big")

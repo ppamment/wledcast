@@ -83,7 +83,8 @@ def test_ddp_packet_structure():
         
         header = packet_data[:10]
         print(f"    ✓ Header: {header.hex()}")
-        
+        assert header[1] == 0x0B, "Second DDP header byte should be 0x0B"
+
         # Verify data portion contains our RGB data
         data_portion = packet_data[10:]
         expected_data = byte_data
