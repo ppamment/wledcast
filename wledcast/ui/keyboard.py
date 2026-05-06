@@ -2,9 +2,9 @@ import logging
 import math
 from multiprocessing import Event
 
-import keyboard
 import wx
 from wxasync import WxAsyncApp
+from pynput import keyboard
 
 from wledcast.config import border_size, max_x, max_y, min_desktop_x, min_desktop_y
 from wledcast.model import Box
@@ -109,32 +109,109 @@ def setup_keybinds(
         perform_action(action_type, key)
         update_speed(action_type)
 
-    def on_key_release(event):
-        if event.event_type == 'up' and event.name in ['left', 'right', 'up', 'down']:
-            # Reset the speed for both move and resize actions
-            for action_type in ['move', 'resize']:
-                current_speed[action_type] = min_speed
-
-    # Register the key release handler
-    keyboard.hook(on_key_release)
-
-    # Bind hotkeys for moving and resizing
-    keyboard.add_hotkey('ctrl+left', lambda: move_resize_handler("move", "left"), suppress=True)
-    keyboard.add_hotkey('ctrl+right', lambda: move_resize_handler("move", "right"), suppress=True)
-    keyboard.add_hotkey('ctrl+up', lambda: move_resize_handler("move", "up"), suppress=True)
-    keyboard.add_hotkey('ctrl+down', lambda: move_resize_handler("move", "down"), suppress=True)
-
-    keyboard.add_hotkey('alt+left', lambda: move_resize_handler("resize", "left"), suppress=True)
-    keyboard.add_hotkey('alt+right', lambda: move_resize_handler("resize", "right"), suppress=True)
-    keyboard.add_hotkey('alt+up', lambda: move_resize_handler("resize", "up"), suppress=True)
-    keyboard.add_hotkey('alt+down', lambda: move_resize_handler("resize", "down"), suppress=True)
-
     # Function to handle escape key
     def on_escape():
         stop_event.set()
-        wx.CallAfter(keyboard.unhook_all)
+        if hotkey_listener:
+            wx.CallAfter(hotkey_listener.stop)
+        if key_listener:
+            wx.CallAfter(key_listener.stop)
         wx.CallAfter(app.ExitMainLoop)
 
-    keyboard.add_hotkey('esc', on_escape, suppress=True)
+    # Track currently pressed modifier keys
+    ctrl_pressed = False
+    alt_pressed = False
 
-    return lambda: keyboard.unhook_all()  # Return a callable to unhook all hotkeys
+    # Handle key press including repeats for acceleration behavior
+    def on_key_press(key):
+        nonlocal ctrl_pressed, alt_pressed
+        
+        try:
+            # Track modifier keys
+            if key == keyboard.Key.ctrl_l or key == keyboard.Key.ctrl_r:
+                ctrl_pressed = True
+            elif key == keyboard.Key.alt_l or key == keyboard.Key.alt_r:
+                alt_pressed = True
+            elif key == keyboard.Key.esc:
+                on_escape()
+                return
+            
+            # Handle directional keys with modifiers - this triggers on every repeat!
+            direction_map = {
+                keyboard.Key.left: "left",
+                keyboard.Key.right: "right", 
+                keyboard.Key.up: "up",
+                keyboard.Key.down: "down"
+            }
+            
+            if key in direction_map:
+                direction = direction_map[key]
+                
+                if ctrl_pressed:
+                    move_resize_handler("move", direction)
+                    return
+                elif alt_pressed:
+                    move_resize_handler("resize", direction)
+                    return
+                    
+        except Exception as e:
+            # Ignore errors in key handling
+            pass
+        
+
+    def on_key_release(key):
+        nonlocal ctrl_pressed, alt_pressed
+        
+        try:
+            # Track modifier keys
+            if key == keyboard.Key.ctrl_l or key == keyboard.Key.ctrl_r:
+                ctrl_pressed = False
+            elif key == keyboard.Key.alt_l or key == keyboard.Key.alt_r:
+                alt_pressed = False
+            
+            # Reset speed when arrow keys are released
+            if key in [keyboard.Key.left, keyboard.Key.right, keyboard.Key.up, keyboard.Key.down]:
+                for action_type in ['move', 'resize']:
+                    current_speed[action_type] = min_speed
+                    
+        except Exception as e:
+            # Ignore errors in key release handling
+            pass
+
+    # Use simple escape hotkey for non-directional keys
+    hotkeys = {
+        '<esc>': on_escape,
+    }
+
+    # Set up global hotkey listener for escape
+    try:
+        hotkey_listener = keyboard.GlobalHotKeys(hotkeys)
+        hotkey_listener.start()
+        logger.info("Global hotkeys enabled")
+    except Exception as e:
+        logger.warning(f"Global hotkeys failed to initialize: {e}")
+        hotkey_listener = None
+
+    # Set up key listener for directional keys and acceleration
+    try:
+        key_listener = keyboard.Listener(
+            on_press=on_key_press,
+            on_release=on_key_release,
+            suppress=False,
+        )
+        key_listener.start()
+    except Exception as e:
+        logger.warning(f"Key listener failed: {e}")
+        key_listener = None
+
+    # Return cleanup function
+    def cleanup():
+        try:
+            if hotkey_listener:
+                hotkey_listener.stop()
+            if key_listener:
+                key_listener.stop()
+        except Exception:
+            pass
+
+    return cleanup
